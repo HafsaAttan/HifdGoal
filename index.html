@@ -1,15 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Qur'an Memorization Estimator</title>
-  <link rel="stylesheet" href="style.css"/>
+  <title>HifdGoal — Qur'an Tools</title>
+  <link rel="stylesheet" href="Style.css"/>
+  <style>
+    .nav-cards {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 32px auto 0;
+      max-width: 600px;
+      padding: 0 20px;
+    }
+    .nav-card {
+      flex: 1;
+      min-width: 220px;
+      background: #fff;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+      text-align: center;
+    }
+    .nav-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-color: #D1D5DB; }
+    .nav-card .icon { font-size: 2rem; margin-bottom: 10px; }
+    .nav-card .title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 4px; }
+    .nav-card .desc { font-size: 0.75rem; color: #9CA3AF; }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>Qur'an Memorization Estimator</h1>
-    
+    <h1>HifdGoal</h1>
+    <p style="text-align:center; color:#6B7280; font-size:0.85rem; margin-top:-12px; margin-bottom:32px;">
+      Qur'an memorisatie &amp; dhikr tools
+    </p>
+
+    <div class="nav-cards">
+      <a href="adkhar.html" class="nav-card">
+        <div class="icon">📿</div>
+        <div class="title">Adhkaar</div>
+        <div class="desc">Ochtend &amp; avond dhikr tracker</div>
+      </a>
+      <a href="#memorisatie" class="nav-card" onclick="document.getElementById('memorisatie').scrollIntoView({behavior:'smooth'}); return false;">
+        <div class="icon">📖</div>
+        <div class="title">Memorisatie</div>
+        <div class="desc">Bereken je hifd tijdlijn</div>
+      </a>
+    </div>
+
+    <hr id="memorisatie" style="margin: 48px 0 32px; border: none; border-top: 1px solid #E5E7EB;" />
+
+    <h2 style="text-align:center; font-size:1.1rem; margin-bottom:24px;">Qur'an Memorisatie Schatting</h2>
+
     <label for="minutesPerDay">Hoeveel minuten per dag kun je memoriseren?</label>
     <input type="number" id="minutesPerDay" placeholder="Bijv. 30" />
 
@@ -27,14 +75,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-<div>
-  <label for="minutes">Aantal minuten per dag:</label>
-  <input type="number" id="minutes" name="minutes" required>
-</div>
-<button onclick="calculateMemorizationTime()">Bereken hoe lang het duurt</button>
-
-<div id="result"></div>
-
-
-
-

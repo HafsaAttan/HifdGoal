@@ -1,42 +1,35 @@
-document.getElementById('memorization-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const minutesPerDay = parseInt(document.getElementById('minutes-per-day').value, 10);
-    const linesPerSession = parseInt(document.getElementById('lines-per-session').value, 10);
+function calculate() {
+  const minutesPerDay = parseInt(document.getElementById("minutesPerDay").value, 10);
+  const daysPerWeek   = parseInt(document.getElementById("daysPerWeek").value, 10);
+  const targetJuz     = parseInt(document.getElementById("targetJuz").value, 10);
+  const result        = document.getElementById("result");
 
-    const totalLines = 6236; // Gemiddeld aantal regels in de Qur'an
-    const daysNeeded = Math.ceil(totalLines / linesPerSession);
-    const weeks = Math.floor(daysNeeded / 7);
-    const days = daysNeeded % 7;
-
-    document.getElementById('result').innerHTML =
-        `Je hebt ongeveer <strong>${weeks} weken en ${days} dagen</strong> nodig om de hele Qur'an te memoriseren.`;
-});
-function calculateMemorizationTime() {
-  // Haal de ingevoerde minuten per dag op
-  const minutesPerDay = document.getElementById("minutes").value;
-
-  if (!minutesPerDay || minutesPerDay <= 0) {
-    document.getElementById("result").innerText = "Voer een geldig aantal minuten in.";
+  if (!minutesPerDay || minutesPerDay <= 0 || !daysPerWeek || daysPerWeek <= 0 || !targetJuz || targetJuz <= 0) {
+    result.innerHTML = "<p style='color:#EF4444'>Vul alle velden in met geldige waarden.</p>";
     return;
   }
 
-  // Totaal aantal versen in de Qur'an
-  const totalVerses = 6236;
+  // ~10 verses per page, 20 pages per juz, 1 minute per verse on average
+  const versesPerJuz  = 10 * 20;
+  const totalVerses   = targetJuz * versesPerJuz;
+  const minutesPerVerse = 1;
+  const totalMinutes  = totalVerses * minutesPerVerse;
+  const sessionsNeeded = Math.ceil(totalMinutes / minutesPerDay);
+  const totalDays     = Math.ceil(sessionsNeeded / (daysPerWeek / 7));
 
-  // Gemiddeld aantal tijd per vers (bijvoorbeeld 1 minuut per vers)
-  const minutesPerVerse = 1; 
+  const years  = Math.floor(totalDays / 365);
+  const months = Math.floor((totalDays % 365) / 30);
+  const days   = totalDays % 30;
 
-  // Bereken de totale tijd om de Qur'an te memoriseren
-  const totalMinutesRequired = totalVerses * minutesPerVerse;
+  let tijdLabel = "";
+  if (years > 0)  tijdLabel += `${years} jaar `;
+  if (months > 0) tijdLabel += `${months} maanden `;
+  if (days > 0)   tijdLabel += `${days} dagen`;
+  if (!tijdLabel) tijdLabel = "minder dan een dag";
 
-  // Bereken het aantal dagen
-  const daysRequired = totalMinutesRequired / minutesPerDay;
-
-  // Bereken jaren, maanden en dagen
-  const years = Math.floor(daysRequired / 365);
-  const months = Math.floor((daysRequired % 365) / 30);
-  const days = Math.floor(daysRequired % 30);
-
-  // Toon het resultaat
-  document.getElementById("result").innerText = `Het duurt ongeveer ${years} jaar, ${months} maanden en ${days} dagen om de Qur'an te memoriseren.`;
+  result.innerHTML = `
+    <p>Bij <strong>${minutesPerDay} min/dag</strong> op <strong>${daysPerWeek} dagen/week</strong>
+    duurt het memoriseren van <strong>${targetJuz} juz</strong> ongeveer:</p>
+    <p style="font-size:1.4em; font-weight:bold; color:#008080">${tijdLabel.trim()}</p>
+  `;
 }
