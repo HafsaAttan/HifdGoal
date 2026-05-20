@@ -51,12 +51,12 @@ const GLOBAL_CSS = `
 
   .nav-btn {
     font-family: 'Cormorant SC', serif;
-    font-size: 0.78rem;
+    font-size: 0.95rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--ink-muted);
     cursor: pointer;
-    padding: 8px 4px;
+    padding: 10px 6px;
     transition: color 0.2s;
     border: none;
     background: none;
@@ -78,10 +78,10 @@ const GLOBAL_CSS = `
   .pill {
     display: inline-block;
     font-family: 'Cormorant SC', serif;
-    font-size: 0.68rem;
+    font-size: 0.85rem;
     letter-spacing: 0.14em;
     border-radius: 2px;
-    padding: 3px 8px;
+    padding: 4px 10px;
   }
 
   .paper::before {
@@ -225,7 +225,7 @@ function DagRing({ date, allData }) {
   const ochPct = ADKHAR.ochtend.filter(d => dayData[`${dayKey}-${d.id}`]).length / ADKHAR.ochtend.length;
   const avPct  = ADKHAR.avond.filter(d => dayData[`${dayKey}-${d.id}`]).length / ADKHAR.avond.length;
 
-  const RO = 20, RI = 12;
+  const RO = 28, RI = 17;
   const CO = 2 * Math.PI * RO, CI = 2 * Math.PI * RI;
 
   const isToday  = dayKey === todayKey;
@@ -234,17 +234,17 @@ function DagRing({ date, allData }) {
   const dagNum   = date.getDate();
 
   return (
-    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, opacity: isFuture ? 0.25 : 1 }}>
-      <div style={{ position:"relative", width:50, height:50 }}>
-        <svg width="50" height="50" style={{ transform:"rotate(-90deg)" }}>
-          <circle cx="25" cy="25" r={RO} fill="none" stroke="#C4933A20" strokeWidth="4"/>
-          <circle cx="25" cy="25" r={RO} fill="none" stroke="#C4933A" strokeWidth="4"
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:7, opacity: isFuture ? 0.25 : 1 }}>
+      <div style={{ position:"relative", width:68, height:68 }}>
+        <svg width="68" height="68" style={{ transform:"rotate(-90deg)" }}>
+          <circle cx="34" cy="34" r={RO} fill="none" stroke="#C4933A20" strokeWidth="5"/>
+          <circle cx="34" cy="34" r={RO} fill="none" stroke="#C4933A" strokeWidth="5"
             strokeLinecap="round" strokeDasharray={CO}
             strokeDashoffset={CO * (1 - ochPct)}
             style={{ transition:"stroke-dashoffset 0.5s ease" }}
           />
-          <circle cx="25" cy="25" r={RI} fill="none" stroke="#2A527820" strokeWidth="4"/>
-          <circle cx="25" cy="25" r={RI} fill="none" stroke="#2A5278" strokeWidth="4"
+          <circle cx="34" cy="34" r={RI} fill="none" stroke="#2A527820" strokeWidth="5"/>
+          <circle cx="34" cy="34" r={RI} fill="none" stroke="#2A5278" strokeWidth="5"
             strokeLinecap="round" strokeDasharray={CI}
             strokeDashoffset={CI * (1 - avPct)}
             style={{ transition:"stroke-dashoffset 0.5s ease" }}
@@ -252,9 +252,9 @@ function DagRing({ date, allData }) {
         </svg>
       </div>
       <div style={{ textAlign:"center" }}>
-        <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.65rem", letterSpacing:"0.06em",
+        <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.82rem", letterSpacing:"0.06em",
           color: isToday ? "var(--gold)" : "var(--ink-faint)" }}>{dagNaam}</div>
-        <div style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"0.9rem",
+        <div style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"1.1rem",
           color: isToday ? "var(--ink)" : "var(--ink-muted)", fontWeight: isToday ? 600 : 400 }}>{dagNum}</div>
       </div>
     </div>
@@ -383,39 +383,39 @@ export default function AdkharApp() {
 
         {/* Begroeting */}
         <div style={{ padding:"24px 28px 0", animation:"fadeUp 0.6s ease both" }}>
-          <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"2.2rem", color:"var(--ink)", direction:"rtl", textAlign:"right", lineHeight:1.3 }}>
+          <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"2.8rem", color:"var(--ink)", direction:"rtl", textAlign:"right", lineHeight:1.3 }}>
             السلام عليكم
           </div>
-          <div style={{ marginTop:6, fontSize:"1.6rem", color:"var(--ink-soft)", fontWeight:300 }}>Hafsa</div>
-          <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:3 }}>
-            <div style={{ fontSize:"0.95rem", color:"var(--ink-muted)", fontStyle:"italic" }}>
+          <div style={{ marginTop:8, fontSize:"2rem", color:"var(--ink-soft)", fontWeight:300 }}>Hafsa</div>
+          <div style={{ marginTop:12, display:"flex", flexDirection:"column", gap:4 }}>
+            <div style={{ fontSize:"1.1rem", color:"var(--ink-muted)", fontStyle:"italic" }}>
               {tijd.datum} · {tijd.tijd}
             </div>
             {hijri && (
-              <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"0.95rem", color:"var(--ink-faint)", direction:"rtl", textAlign:"right" }}>
+              <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.1rem", color:"var(--ink-faint)", direction:"rtl", textAlign:"right" }}>
                 {hijri}
               </div>
             )}
           </div>
-          <div style={{ marginTop:14 }}><Ornament color="#C4933A" opacity={0.4}/></div>
+          <div style={{ marginTop:16 }}><Ornament color="#C4933A" opacity={0.4}/></div>
         </div>
 
         {/* Kalenderstrip */}
-        <div style={{ padding:"24px 28px 0", animation:"fadeUp 0.6s 0.08s ease both" }}>
-          <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.7rem", color:"var(--ink-faint)", letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:14 }}>
+        <div style={{ padding:"28px 28px 0", animation:"fadeUp 0.6s 0.08s ease both" }}>
+          <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.82rem", color:"var(--ink-faint)", letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:16 }}>
             Voortgang · 7 dagen
           </div>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
             {kalenderDagen.map((d, i) => <DagRing key={i} date={d} allData={allData} />)}
           </div>
-          <div style={{ display:"flex", gap:16, marginTop:12 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:"#C4933A" }}/>
-              <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.68rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Ochtend</span>
+          <div style={{ display:"flex", gap:20, marginTop:14 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+              <div style={{ width:10, height:10, borderRadius:"50%", background:"#C4933A" }}/>
+              <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.85rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Ochtend</span>
             </div>
-            <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:"#2A5278" }}/>
-              <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.68rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Avond</span>
+            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+              <div style={{ width:10, height:10, borderRadius:"50%", background:"#2A5278" }}/>
+              <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.85rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Avond</span>
             </div>
           </div>
         </div>
@@ -433,27 +433,27 @@ export default function AdkharApp() {
                 onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.6)"}
                 onMouseLeave={e => e.currentTarget.style.background="transparent"}
               >
-                <div style={{ flexShrink:0, position:"relative", width:52, height:52 }}>
-                  <svg width="52" height="52" style={{ transform:"rotate(-90deg)" }}>
-                    <circle cx="26" cy="26" r="22" fill="none" stroke={s.accent+"18"} strokeWidth="3"/>
-                    <circle cx="26" cy="26" r="22" fill="none" stroke={s.accent} strokeWidth="3"
-                      strokeLinecap="round" strokeDasharray={2*Math.PI*22}
-                      strokeDashoffset={2*Math.PI*22*(1-pct)} style={{ transition:"stroke-dashoffset 0.6s ease" }}
+                <div style={{ flexShrink:0, position:"relative", width:64, height:64 }}>
+                  <svg width="64" height="64" style={{ transform:"rotate(-90deg)" }}>
+                    <circle cx="32" cy="32" r="27" fill="none" stroke={s.accent+"18"} strokeWidth="4"/>
+                    <circle cx="32" cy="32" r="27" fill="none" stroke={s.accent} strokeWidth="4"
+                      strokeLinecap="round" strokeDasharray={2*Math.PI*27}
+                      strokeDashoffset={2*Math.PI*27*(1-pct)} style={{ transition:"stroke-dashoffset 0.6s ease" }}
                     />
                   </svg>
                   <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                     {done
-                      ? <span style={{ fontSize:"0.9rem", color:s.accent }}>✓</span>
-                      : <span style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"0.85rem", color:s.accent, fontWeight:500 }}>{Math.round(pct*100)}%</span>
+                      ? <span style={{ fontSize:"1.1rem", color:s.accent }}>✓</span>
+                      : <span style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"1rem", color:s.accent, fontWeight:500 }}>{Math.round(pct*100)}%</span>
                     }
                   </div>
                 </div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.15rem", color:"var(--ink-soft)", direction:"rtl", marginBottom:4 }}>{s.arabisch}</div>
-                  <div style={{ fontSize:"1rem", color:"var(--ink)", fontWeight:500, marginBottom:3 }}>{s.label}</div>
-                  <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.72rem", color:"var(--ink-faint)", letterSpacing:"0.05em" }}>{s.sub} · {s.volt}/{s.totaal}</div>
+                  <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.4rem", color:"var(--ink-soft)", direction:"rtl", marginBottom:5 }}>{s.arabisch}</div>
+                  <div style={{ fontSize:"1.2rem", color:"var(--ink)", fontWeight:500, marginBottom:4 }}>{s.label}</div>
+                  <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.88rem", color:"var(--ink-faint)", letterSpacing:"0.05em" }}>{s.sub} · {s.volt}/{s.totaal}</div>
                 </div>
-                <div style={{ flexShrink:0, fontSize:"0.85rem", color:"var(--ink-faint)" }}>→</div>
+                <div style={{ flexShrink:0, fontSize:"1rem", color:"var(--ink-faint)" }}>→</div>
               </div>
             );
           })}
@@ -486,21 +486,21 @@ export default function AdkharApp() {
               return (
                 <div key={d.id} className="dhikr-card"
                   onClick={() => { setSessie(type); gaanNaar(i); setScherm("sessie"); }}
-                  style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"13px 16px", marginBottom:5, opacity: isVolt ? 0.72 : 1 }}
+                  style={{ display:"flex", alignItems:"flex-start", gap:14, padding:"16px 18px", marginBottom:6, opacity: isVolt ? 0.72 : 1 }}
                 >
-                  <div style={{ width:20, height:20, borderRadius:"50%", border:`1.5px solid ${isVolt ? "#4A7C59" : c.accent}40`,
+                  <div style={{ width:24, height:24, borderRadius:"50%", border:`1.5px solid ${isVolt ? "#4A7C59" : c.accent}40`,
                     background: isVolt ? "#4A7C59" : "transparent", display:"flex", alignItems:"center", justifyContent:"center",
-                    fontSize:"0.65rem", color:"white", flexShrink:0, marginTop:2 }}>
+                    fontSize:"0.75rem", color:"white", flexShrink:0, marginTop:2 }}>
                     {isVolt ? "✓" : ""}
                   </div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.05rem", color: isVolt ? "var(--ink-muted)" : "var(--ink-soft)",
-                      marginBottom:4, direction:"rtl", textAlign:"right", lineHeight:1.6 }}>
+                    <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.25rem", color: isVolt ? "var(--ink-muted)" : "var(--ink-soft)",
+                      marginBottom:6, direction:"rtl", textAlign:"right", lineHeight:1.7 }}>
                       {d.arabic.length > 60 ? d.arabic.slice(0,60)+"…" : d.arabic}
                     </div>
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                       <span className="pill" style={{ background:c.pill, color:c.pillText }}>{d.categorie}</span>
-                      <span style={{ fontSize:"0.75rem", color:"var(--ink-faint)", fontFamily:"'Cormorant SC', serif" }}>{d.aantal}×</span>
+                      <span style={{ fontSize:"0.9rem", color:"var(--ink-faint)", fontFamily:"'Cormorant SC', serif" }}>{d.aantal}×</span>
                     </div>
                   </div>
                 </div>
@@ -559,7 +559,7 @@ export default function AdkharApp() {
           </div>
 
           <div className="stagger-2" style={{ padding:"18px 26px 0", direction:"rtl" }}>
-            <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.9rem", lineHeight:2.1, color:"var(--ink)", textAlign:"right" }}>
+            <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"2.2rem", lineHeight:2.1, color:"var(--ink)", textAlign:"right" }}>
               {huidig.arabic}
             </div>
           </div>
@@ -569,13 +569,13 @@ export default function AdkharApp() {
           </div>
 
           <div className="stagger-3" style={{ padding:"12px 26px 0" }}>
-            <div style={{ fontSize:"0.97rem", color:"var(--ink-muted)", fontStyle:"italic", lineHeight:1.85 }}>
+            <div style={{ fontSize:"1.1rem", color:"var(--ink-muted)", fontStyle:"italic", lineHeight:1.85 }}>
               {huidig.fonetisch}
             </div>
           </div>
 
           <div className="stagger-4" style={{ padding:"8px 26px 0" }}>
-            <div style={{ fontSize:"0.97rem", color:"var(--ink-faint)", lineHeight:1.9 }}>
+            <div style={{ fontSize:"1.1rem", color:"var(--ink-faint)", lineHeight:1.9 }}>
               {huidig.vertaling}
             </div>
           </div>
@@ -583,14 +583,14 @@ export default function AdkharApp() {
           {huidig.beloning && (
             <div className="stagger-5" style={{ padding:"16px 26px 0" }}>
               <button onClick={() => setBeloningOpen(!beloningOpen)}
-                style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px",
+                style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"8px 16px",
                   display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer",
-                  fontFamily:"'Cormorant SC', serif", fontSize:"0.72rem", color:c.accent, letterSpacing:"0.12em", textTransform:"uppercase" }}>
+                  fontFamily:"'Cormorant SC', serif", fontSize:"0.88rem", color:c.accent, letterSpacing:"0.12em", textTransform:"uppercase" }}>
                 ✦ {beloningOpen ? "Verberg beloning" : "Beloning"}
               </button>
               {beloningOpen && (
-                <div style={{ marginTop:10, padding:"14px 18px", background:c.bg, border:`1px solid ${c.accent}20`,
-                  borderRadius:2, fontSize:"0.93rem", color:"var(--ink-soft)", lineHeight:1.8, fontStyle:"italic", animation:"fadeUp 0.3s ease" }}>
+                <div style={{ marginTop:10, padding:"16px 20px", background:c.bg, border:`1px solid ${c.accent}20`,
+                  borderRadius:2, fontSize:"1.05rem", color:"var(--ink-soft)", lineHeight:1.85, fontStyle:"italic", animation:"fadeUp 0.3s ease" }}>
                   {huidig.beloning}
                 </div>
               )}
@@ -624,18 +624,18 @@ export default function AdkharApp() {
               </svg>
               <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
                 {isVolt ? (
-                  <div style={{ fontSize:"1.6rem", color:"var(--sage)" }}>✓</div>
+                  <div style={{ fontSize:"2rem", color:"var(--sage)" }}>✓</div>
                 ) : (
                   <>
-                    <div style={{ fontSize:"2rem", fontWeight:300, color:c.accent, lineHeight:1, fontFamily:"'Cormorant Garamond', serif" }}>{restant}</div>
-                    <div style={{ fontSize:"0.68rem", color:"var(--ink-faint)", letterSpacing:"0.08em", fontFamily:"'Cormorant SC', serif", marginTop:1 }}>
+                    <div style={{ fontSize:"2.5rem", fontWeight:300, color:c.accent, lineHeight:1, fontFamily:"'Cormorant Garamond', serif" }}>{restant}</div>
+                    <div style={{ fontSize:"0.82rem", color:"var(--ink-faint)", letterSpacing:"0.08em", fontFamily:"'Cormorant SC', serif", marginTop:2 }}>
                       {restant === huidig.aantal ? `${huidig.aantal}×` : "resterend"}
                     </div>
                   </>
                 )}
               </div>
             </div>
-            <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.75rem", color:"var(--ink-faint)", letterSpacing:"0.12em", textTransform:"uppercase" }}>
+            <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.92rem", color:"var(--ink-faint)", letterSpacing:"0.12em", textTransform:"uppercase" }}>
               {isVolt ? "Voltooid · tik om verder" : `${teller} / ${huidig.aantal} · tik om te tellen`}
             </div>
           </div>
