@@ -1,40 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Qur'an Memorization Estimator</title>
-  <link rel="stylesheet" href="style.css"/>
-</head>
-<body>
-  <div class="container">
-    <h1>Qur'an Memorization Estimator</h1>
-    
-    <label for="minutesPerDay">Hoeveel minuten per dag kun je memoriseren?</label>
-    <input type="number" id="minutesPerDay" placeholder="Bijv. 30" />
-
-    <label for="daysPerWeek">Op hoeveel dagen per week?</label>
-    <input type="number" id="daysPerWeek" placeholder="Bijv. 5" />
-
-    <label for="targetJuz">Hoeveel Juz wil je memoriseren?</label>
-    <input type="number" id="targetJuz" placeholder="Bijv. 30 (voor volledige Qur'an)" />
-
-    <button onclick="calculate()">Bereken</button>
-
-    <div id="result"></div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Adkhar — Ochtend &amp; Avond</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
-<div>
-  <label for="minutes">Aantal minuten per dag:</label>
-  <input type="number" id="minutes" name="minutes" required>
-</div>
-<button onclick="calculateMemorizationTime()">Bereken hoe lang het duurt</button>
-
-<div id="result"></div>
-
-
-
-
