@@ -383,7 +383,7 @@ export default function AdkharApp() {
   const [beloningOpen, setBeloningOpen] = useState(false);
   const [tijd, setTijd]               = useState(getDutchDateTime());
   const [vrijeTeller, setVrijeTeller]   = useState(0);
-  const [vrijeDoelwit, setVrijeDoelwit] = useState(100);
+  const [vrijeDoelwit, setVrijeDoelwit] = useState(null);
   const [vrijeTekst, setVrijeTekst]     = useState("Istighfaar");
   const [vrijeRipples, setVrijeRipples] = useState([]);
 
@@ -574,11 +574,12 @@ export default function AdkharApp() {
 
   /* ═══════════ VRIJE TELLER ══════════════════════════════════════════════ */
   if (scherm === "vrije-teller") {
-    const vrijePct  = Math.min(vrijeTeller / vrijeDoelwit, 1);
-    const R2        = 52, CIRC2 = 2 * Math.PI * R2;
-    const klaarVrij = vrijeTeller >= vrijeDoelwit;
+    const heeftDoelwit = vrijeDoelwit !== null;
+    const vrijePct     = heeftDoelwit ? Math.min(vrijeTeller / vrijeDoelwit, 1) : 0;
+    const R2           = 52, CIRC2 = 2 * Math.PI * R2;
+    const klaarVrij    = heeftDoelwit && vrijeTeller >= vrijeDoelwit;
 
-    const SNEL_DOELEN = [33, 100, 300, 500, 1000];
+    const SNEL_DOELEN = [null, 33, 100, 300, 500, 1000];
     const SNEL_DHIKR  = ["Istighfaar", "Subhanallah", "Alhamdulillah", "Allahu Akbar", "Salawaat", "La ilaha illallah"];
 
     return (
@@ -607,25 +608,30 @@ export default function AdkharApp() {
           </div>
           <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.78rem", color:"var(--ink-faint)", letterSpacing:"0.14em", marginBottom:10 }}>Doelwit</div>
           <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-            {SNEL_DOELEN.map(n => (
-              <button key={n} onClick={() => { setVrijeDoelwit(n); setVrijeTeller(0); }}
-                style={{ padding:"6px 18px", borderRadius:2, border:`1px solid ${vrijeDoelwit===n ? "var(--gold)" : "var(--cream-deep)"}`,
-                  background: vrijeDoelwit===n ? "var(--gold-faint)" : "transparent",
-                  fontFamily:"'Cormorant Garamond', serif", fontSize:"1.1rem",
-                  color: vrijeDoelwit===n ? "var(--gold)" : "var(--ink-muted)",
-                  cursor:"pointer" }}>
-                {n.toLocaleString("nl-NL")}
-              </button>
-            ))}
+            {SNEL_DOELEN.map(n => {
+              const actief = vrijeDoelwit === n;
+              return (
+                <button key={String(n)} onClick={() => { setVrijeDoelwit(n); setVrijeTeller(0); }}
+                  style={{ padding:"6px 18px", borderRadius:2, border:`1px solid ${actief ? "var(--gold)" : "var(--cream-deep)"}`,
+                    background: actief ? "var(--gold-faint)" : "transparent",
+                    fontFamily:"'Cormorant Garamond', serif", fontSize:"1.1rem",
+                    color: actief ? "var(--gold)" : "var(--ink-muted)",
+                    cursor:"pointer" }}>
+                  {n === null ? "∞" : n.toLocaleString("nl-NL")}
+                </button>
+              );
+            })}
           </div>
         </div>
 
+        {/* Tikzone */}
         <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
           <div onClick={handleVrijeTik}
             style={{ position:"relative", margin:"24px 20px", borderRadius:4,
               background: klaarVrij ? "linear-gradient(160deg,#EBF7F2,#F5FBF7)" : "linear-gradient(160deg,#FFFFFF,#FDFBF7)",
               border:`1px solid ${klaarVrij ? "#86EFAC55" : "var(--gold-faint)"}`,
-              padding:"48px 40px", cursor:"pointer", overflow:"hidden",
+              padding: heeftDoelwit ? "48px 40px" : "56px 40px",
+              cursor:"pointer", overflow:"hidden",
               display:"flex", flexDirection:"column", alignItems:"center", gap:20,
               boxShadow:"0 2px 24px rgba(0,0,0,0.06)", WebkitTapHighlightColor:"transparent",
               width:"100%", maxWidth:360 }}>
@@ -634,39 +640,48 @@ export default function AdkharApp() {
                 background:"#C4933A25", borderRadius:"50%", transform:"translate(-50%,-50%) scale(0)",
                 animation:"rippleOut 0.8s ease-out forwards", pointerEvents:"none" }}/>
             ))}
-            <div style={{ position:"relative", width:120, height:120 }}>
-              <svg width="120" height="120" style={{ transform:"rotate(-90deg)" }}>
-                <circle cx="60" cy="60" r={R2} fill="none" stroke="#C4933A18" strokeWidth="5"/>
-                <circle cx="60" cy="60" r={R2} fill="none" stroke="#C4933A" strokeWidth="5"
-                  strokeLinecap="round" strokeDasharray={CIRC2}
-                  strokeDashoffset={CIRC2*(1-vrijePct)}
-                  style={{ transition:"stroke-dashoffset 0.15s ease", filter:"drop-shadow(0 0 4px #C4933A55)" }}
-                />
-              </svg>
-              <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
-                {klaarVrij
-                  ? <div style={{ fontSize:"2.4rem", color:"var(--sage)" }}>✓</div>
-                  : <>
-                      <div style={{ fontSize:"3rem", fontWeight:300, color:"var(--gold)", lineHeight:1 }}>{vrijeTeller.toLocaleString("nl-NL")}</div>
-                      <div style={{ fontSize:"0.85rem", color:"var(--ink-faint)", fontFamily:"'Cormorant SC', serif", letterSpacing:"0.08em", marginTop:4 }}>
-                        van {vrijeDoelwit.toLocaleString("nl-NL")}
-                      </div>
-                    </>
-                }
+
+            {heeftDoelwit ? (
+              <div style={{ position:"relative", width:120, height:120 }}>
+                <svg width="120" height="120" style={{ transform:"rotate(-90deg)" }}>
+                  <circle cx="60" cy="60" r={R2} fill="none" stroke="#C4933A18" strokeWidth="5"/>
+                  <circle cx="60" cy="60" r={R2} fill="none" stroke="#C4933A" strokeWidth="5"
+                    strokeLinecap="round" strokeDasharray={CIRC2}
+                    strokeDashoffset={CIRC2*(1-vrijePct)}
+                    style={{ transition:"stroke-dashoffset 0.15s ease", filter:"drop-shadow(0 0 4px #C4933A55)" }}
+                  />
+                </svg>
+                <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                  {klaarVrij
+                    ? <div style={{ fontSize:"2.4rem", color:"var(--sage)" }}>✓</div>
+                    : <>
+                        <div style={{ fontSize:"3rem", fontWeight:300, color:"var(--gold)", lineHeight:1 }}>{vrijeTeller.toLocaleString("nl-NL")}</div>
+                        <div style={{ fontSize:"0.85rem", color:"var(--ink-faint)", fontFamily:"'Cormorant SC', serif", letterSpacing:"0.08em", marginTop:4 }}>
+                          van {vrijeDoelwit.toLocaleString("nl-NL")}
+                        </div>
+                      </>
+                  }
+                </div>
               </div>
-            </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:8 }}>
+                <div style={{ fontSize:"5rem", fontWeight:300, color:"var(--gold)", lineHeight:1, fontFamily:"'Cormorant Garamond', serif" }}>
+                  {vrijeTeller.toLocaleString("nl-NL")}
+                </div>
+              </div>
+            )}
+
             <div style={{ textAlign:"center" }}>
               <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.95rem", color:"var(--ink-muted)", letterSpacing:"0.12em" }}>
                 {klaarVrij ? `${vrijeDoelwit.toLocaleString("nl-NL")}× ${vrijeTekst} voltooid` : vrijeTekst}
               </div>
               {!klaarVrij && (
-                <div style={{ fontSize:"0.85rem", color:"var(--ink-faint)", marginTop:4, fontStyle:"italic" }}>
-                  tik om te tellen
-                </div>
+                <div style={{ fontSize:"0.85rem", color:"var(--ink-faint)", marginTop:4, fontStyle:"italic" }}>tik om te tellen</div>
               )}
             </div>
           </div>
         </div>
+
         {klaarVrij && (
           <div style={{ padding:"0 28px 56px", textAlign:"center" }}>
             <button onClick={() => setVrijeTeller(0)}
