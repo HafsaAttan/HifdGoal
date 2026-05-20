@@ -216,7 +216,102 @@ const CAT = {
   Salawaat:   { accent:"#2A6B52", bg:"#EBF7F2", pill:"#C5EAD8", pillText:"#1A4A38" },
 };
 
-/* ─── Kalender dagring ──────────────────────────────────────────────────────── */
+/* ─── Mini dag ring voor maandkalender ─────────────────────────────────────── */
+function MiniDagRing({ date, allData, todayKey }) {
+  const dayKey  = date.toISOString().split("T")[0];
+  const dayData = allData[dayKey] || {};
+
+  const ochPct = ADKHAR.ochtend.filter(d => dayData[`${dayKey}-${d.id}`]).length / ADKHAR.ochtend.length;
+  const avPct  = ADKHAR.avond.filter(d => dayData[`${dayKey}-${d.id}`]).length / ADKHAR.avond.length;
+
+  const isToday  = dayKey === todayKey;
+  const isFuture = dayKey > todayKey;
+
+  const RO = 16, RI = 9;
+  const CO = 2 * Math.PI * RO, CI = 2 * Math.PI * RI;
+
+  return (
+    <div style={{ display:"flex", justifyContent:"center", alignItems:"center", padding:"2px 0", opacity: isFuture ? 0.28 : 1 }}>
+      <div style={{ position:"relative", width:40, height:40 }}>
+        <svg width="40" height="40" style={{ transform:"rotate(-90deg)" }}>
+          <circle cx="20" cy="20" r={RO} fill="none" stroke="#C4933A18" strokeWidth="3"/>
+          <circle cx="20" cy="20" r={RO} fill="none" stroke="#C4933A" strokeWidth="3"
+            strokeLinecap="round" strokeDasharray={CO} strokeDashoffset={CO * (1 - ochPct)}
+            style={{ transition:"stroke-dashoffset 0.4s ease" }}
+          />
+          <circle cx="20" cy="20" r={RI} fill="none" stroke="#2A527818" strokeWidth="3"/>
+          <circle cx="20" cy="20" r={RI} fill="none" stroke="#2A5278" strokeWidth="3"
+            strokeLinecap="round" strokeDasharray={CI} strokeDashoffset={CI * (1 - avPct)}
+            style={{ transition:"stroke-dashoffset 0.4s ease" }}
+          />
+        </svg>
+        <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <span style={{ fontFamily:"'Cormorant Garamond', serif",
+            fontSize: isToday ? "0.9rem" : "0.8rem",
+            fontWeight: isToday ? 700 : 400,
+            color: isToday ? "var(--gold)" : "var(--ink-muted)" }}>
+            {date.getDate()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Maandkalender ──────────────────────────────────────────────────────────── */
+function MaandKalendar({ allData }) {
+  const vandaag    = new Date();
+  const todayKey   = vandaag.toISOString().split("T")[0];
+  const jaar       = vandaag.getFullYear();
+  const maand      = vandaag.getMonth();
+  const eersteDag  = new Date(jaar, maand, 1);
+  const aantalDagen = new Date(jaar, maand + 1, 0).getDate();
+
+  let startDag = eersteDag.getDay();
+  if (startDag === 0) startDag = 7;
+  startDag -= 1;
+
+  const dagNamen   = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
+  const maandNamen = ["Januari","Februari","Maart","April","Mei","Juni","Juli","Augustus","September","Oktober","November","December"];
+
+  const cellen = [];
+  for (let i = 0; i < startDag; i++) cellen.push(null);
+  for (let d = 1; d <= aantalDagen; d++) cellen.push(new Date(jaar, maand, d));
+
+  return (
+    <div>
+      <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"1rem", color:"var(--ink-soft)",
+        letterSpacing:"0.14em", textTransform:"uppercase", marginBottom:14 }}>
+        {maandNamen[maand]} {jaar}
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(7, 1fr)", gap:"2px 0" }}>
+        {dagNamen.map(n => (
+          <div key={n} style={{ textAlign:"center", fontFamily:"'Cormorant SC', serif",
+            fontSize:"0.75rem", color:"var(--ink-faint)", letterSpacing:"0.08em", paddingBottom:6 }}>
+            {n}
+          </div>
+        ))}
+        {cellen.map((date, i) =>
+          date
+            ? <MiniDagRing key={i} date={date} allData={allData} todayKey={todayKey} />
+            : <div key={i}/>
+        )}
+      </div>
+      <div style={{ display:"flex", gap:20, marginTop:14 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+          <div style={{ width:10, height:10, borderRadius:"50%", background:"#C4933A" }}/>
+          <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.85rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Ochtend</span>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+          <div style={{ width:10, height:10, borderRadius:"50%", background:"#2A5278" }}/>
+          <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.85rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Avond</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Kalender dagring (7-dagen strip, niet meer gebruikt) ──────────────────── */
 function DagRing({ date, allData }) {
   const dayKey   = date.toISOString().split("T")[0];
   const todayKey = new Date().toISOString().split("T")[0];
@@ -287,6 +382,10 @@ export default function AdkharApp() {
   const [scherm, setScherm]           = useState("home");
   const [beloningOpen, setBeloningOpen] = useState(false);
   const [tijd, setTijd]               = useState(getDutchDateTime());
+  const [vrijeTeller, setVrijeTeller]   = useState(0);
+  const [vrijeDoelwit, setVrijeDoelwit] = useState(100);
+  const [vrijeTekst, setVrijeTekst]     = useState("Istighfaar");
+  const [vrijeRipples, setVrijeRipples] = useState([]);
 
   const adkharLijst = ADKHAR[sessie];
   const huidig      = adkharLijst[huidigIndex];
@@ -354,9 +453,23 @@ export default function AdkharApp() {
   const voltVandaag = (type) =>
     ADKHAR[type].filter(d => voltooid[`${todayKey}-${d.id}`]).length;
 
-  const kalenderDagen = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d;
-  });
+  const alleDhikr = [...ADKHAR.ochtend, ...ADKHAR.avond];
+  const totaalVandaag = alleDhikr.reduce((som, d) => {
+    if (voltooid[`${todayKey}-${d.id}`]) return som + d.aantal;
+    return som;
+  }, 0);
+
+  const handleVrijeTik = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const id   = Date.now();
+    setVrijeRipples(p => [...p, { id, x: e.clientX - rect.left, y: e.clientY - rect.top }]);
+    setTimeout(() => setVrijeRipples(p => p.filter(r => r.id !== id)), 800);
+    vibrate(30);
+    const nt = vrijeTeller + 1;
+    setVrijeTeller(nt);
+    if (nt === vrijeDoelwit) vibrate([80, 40, 80, 40, 120]);
+    else if (nt % 100 === 0) vibrate([60, 30, 60]);
+  };
 
   if (!geladen) return (
     <div style={{ minHeight:"100vh", background:"var(--cream)", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -377,16 +490,17 @@ export default function AdkharApp() {
     return (
       <div className="paper" style={{ minHeight:"100vh", background:"var(--cream)", fontFamily:"'Cormorant Garamond', Georgia, serif", display:"flex", flexDirection:"column" }}>
 
-        <div style={{ display:"flex", justifyContent:"flex-end", padding:"44px 28px 0", animation:"fadeIn 0.6s ease" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"44px 28px 0", animation:"fadeIn 0.6s ease" }}>
+          <button className="nav-btn" onClick={() => { setVrijeTeller(0); setScherm("vrije-teller"); }}>Teller</button>
           <button className="nav-btn" onClick={() => setScherm("overzicht")}>Overzicht</button>
         </div>
 
         {/* Begroeting */}
         <div style={{ padding:"24px 28px 0", animation:"fadeUp 0.6s ease both" }}>
-          <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"2.8rem", color:"var(--ink)", direction:"rtl", textAlign:"right", lineHeight:1.3 }}>
-            السلام عليكم
+          <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"2.4rem", color:"var(--ink)", direction:"rtl", textAlign:"right", lineHeight:1.5 }}>
+            السلام عليكم ورحمة الله وبركاته
           </div>
-          <div style={{ marginTop:8, fontSize:"2rem", color:"var(--ink-soft)", fontWeight:300 }}>Hafsa</div>
+          <div style={{ marginTop:8, fontFamily:"'Noto Naskh Arabic', serif", fontSize:"2rem", color:"var(--ink-soft)", direction:"rtl", textAlign:"right" }}>حفصة</div>
           <div style={{ marginTop:12, display:"flex", flexDirection:"column", gap:4 }}>
             <div style={{ fontSize:"1.1rem", color:"var(--ink-muted)", fontStyle:"italic" }}>
               {tijd.datum} · {tijd.tijd}
@@ -398,26 +512,21 @@ export default function AdkharApp() {
             )}
           </div>
           <div style={{ marginTop:16 }}><Ornament color="#C4933A" opacity={0.4}/></div>
+          {totaalVandaag > 0 && (
+            <div style={{ marginTop:14, display:"flex", alignItems:"baseline", gap:8 }}>
+              <span style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"2rem", fontWeight:300, color:"var(--gold)" }}>
+                {totaalVandaag.toLocaleString("nl-NL")}
+              </span>
+              <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.85rem", color:"var(--ink-faint)", letterSpacing:"0.1em" }}>
+                dhikr vandaag
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Kalenderstrip */}
+        {/* Maandkalender */}
         <div style={{ padding:"28px 28px 0", animation:"fadeUp 0.6s 0.08s ease both" }}>
-          <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.82rem", color:"var(--ink-faint)", letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:16 }}>
-            Voortgang · 7 dagen
-          </div>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
-            {kalenderDagen.map((d, i) => <DagRing key={i} date={d} allData={allData} />)}
-          </div>
-          <div style={{ display:"flex", gap:20, marginTop:14 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-              <div style={{ width:10, height:10, borderRadius:"50%", background:"#C4933A" }}/>
-              <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.85rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Ochtend</span>
-            </div>
-            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-              <div style={{ width:10, height:10, borderRadius:"50%", background:"#2A5278" }}/>
-              <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.85rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Avond</span>
-            </div>
-          </div>
+          <MaandKalendar allData={allData} />
         </div>
 
         {/* Sessiekaarten */}
@@ -459,6 +568,115 @@ export default function AdkharApp() {
           })}
         </div>
         <div style={{ paddingBottom:56 }}/>
+      </div>
+    );
+  }
+
+  /* ═══════════ VRIJE TELLER ══════════════════════════════════════════════ */
+  if (scherm === "vrije-teller") {
+    const vrijePct  = Math.min(vrijeTeller / vrijeDoelwit, 1);
+    const R2        = 52, CIRC2 = 2 * Math.PI * R2;
+    const klaarVrij = vrijeTeller >= vrijeDoelwit;
+
+    const SNEL_DOELEN = [33, 100, 300, 500, 1000];
+    const SNEL_DHIKR  = ["Istighfaar", "Subhanallah", "Alhamdulillah", "Allahu Akbar", "Salawaat", "La ilaha illallah"];
+
+    return (
+      <div style={{ minHeight:"100vh", background:"var(--cream)", display:"flex", flexDirection:"column",
+        fontFamily:"'Cormorant Garamond', Georgia, serif", userSelect:"none" }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"50px 24px 0" }}>
+          <button className="nav-btn" onClick={() => setScherm("home")}>← Home</button>
+          <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.82rem", color:"var(--ink-muted)", letterSpacing:"0.14em" }}>Vrije Teller</div>
+          <button className="nav-btn" onClick={() => setVrijeTeller(0)} style={{ color:"var(--ink-faint)" }}>Reset</button>
+        </div>
+
+        {/* Dhikr kiezen */}
+        <div style={{ padding:"28px 28px 0" }}>
+          <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.78rem", color:"var(--ink-faint)", letterSpacing:"0.14em", marginBottom:10 }}>Dhikr</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:20 }}>
+            {SNEL_DHIKR.map(t => (
+              <button key={t} onClick={() => setVrijeTekst(t)}
+                style={{ padding:"6px 14px", borderRadius:2, border:`1px solid ${vrijeTekst===t ? "var(--gold)" : "var(--cream-deep)"}`,
+                  background: vrijeTekst===t ? "var(--gold-faint)" : "transparent",
+                  fontFamily:"'Cormorant SC', serif", fontSize:"0.85rem",
+                  color: vrijeTekst===t ? "var(--gold)" : "var(--ink-muted)",
+                  cursor:"pointer", letterSpacing:"0.08em" }}>
+                {t}
+              </button>
+            ))}
+          </div>
+          <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.78rem", color:"var(--ink-faint)", letterSpacing:"0.14em", marginBottom:10 }}>Doelwit</div>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            {SNEL_DOELEN.map(n => (
+              <button key={n} onClick={() => { setVrijeDoelwit(n); setVrijeTeller(0); }}
+                style={{ padding:"6px 18px", borderRadius:2, border:`1px solid ${vrijeDoelwit===n ? "var(--gold)" : "var(--cream-deep)"}`,
+                  background: vrijeDoelwit===n ? "var(--gold-faint)" : "transparent",
+                  fontFamily:"'Cormorant Garamond', serif", fontSize:"1.1rem",
+                  color: vrijeDoelwit===n ? "var(--gold)" : "var(--ink-muted)",
+                  cursor:"pointer" }}>
+                {n.toLocaleString("nl-NL")}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div onClick={handleVrijeTik}
+            style={{ position:"relative", margin:"24px 20px", borderRadius:4,
+              background: klaarVrij ? "linear-gradient(160deg,#EBF7F2,#F5FBF7)" : "linear-gradient(160deg,#FFFFFF,#FDFBF7)",
+              border:`1px solid ${klaarVrij ? "#86EFAC55" : "var(--gold-faint)"}`,
+              padding:"48px 40px", cursor:"pointer", overflow:"hidden",
+              display:"flex", flexDirection:"column", alignItems:"center", gap:20,
+              boxShadow:"0 2px 24px rgba(0,0,0,0.06)", WebkitTapHighlightColor:"transparent",
+              width:"100%", maxWidth:360 }}>
+            {vrijeRipples.map(r => (
+              <div key={r.id} style={{ position:"absolute", left:r.x, top:r.y, width:12, height:12,
+                background:"#C4933A25", borderRadius:"50%", transform:"translate(-50%,-50%) scale(0)",
+                animation:"rippleOut 0.8s ease-out forwards", pointerEvents:"none" }}/>
+            ))}
+            <div style={{ position:"relative", width:120, height:120 }}>
+              <svg width="120" height="120" style={{ transform:"rotate(-90deg)" }}>
+                <circle cx="60" cy="60" r={R2} fill="none" stroke="#C4933A18" strokeWidth="5"/>
+                <circle cx="60" cy="60" r={R2} fill="none" stroke="#C4933A" strokeWidth="5"
+                  strokeLinecap="round" strokeDasharray={CIRC2}
+                  strokeDashoffset={CIRC2*(1-vrijePct)}
+                  style={{ transition:"stroke-dashoffset 0.15s ease", filter:"drop-shadow(0 0 4px #C4933A55)" }}
+                />
+              </svg>
+              <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                {klaarVrij
+                  ? <div style={{ fontSize:"2.4rem", color:"var(--sage)" }}>✓</div>
+                  : <>
+                      <div style={{ fontSize:"3rem", fontWeight:300, color:"var(--gold)", lineHeight:1 }}>{vrijeTeller.toLocaleString("nl-NL")}</div>
+                      <div style={{ fontSize:"0.85rem", color:"var(--ink-faint)", fontFamily:"'Cormorant SC', serif", letterSpacing:"0.08em", marginTop:4 }}>
+                        van {vrijeDoelwit.toLocaleString("nl-NL")}
+                      </div>
+                    </>
+                }
+              </div>
+            </div>
+            <div style={{ textAlign:"center" }}>
+              <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.95rem", color:"var(--ink-muted)", letterSpacing:"0.12em" }}>
+                {klaarVrij ? `${vrijeDoelwit.toLocaleString("nl-NL")}× ${vrijeTekst} voltooid` : vrijeTekst}
+              </div>
+              {!klaarVrij && (
+                <div style={{ fontSize:"0.85rem", color:"var(--ink-faint)", marginTop:4, fontStyle:"italic" }}>
+                  tik om te tellen
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        {klaarVrij && (
+          <div style={{ padding:"0 28px 56px", textAlign:"center" }}>
+            <button onClick={() => setVrijeTeller(0)}
+              style={{ padding:"14px 40px", background:"var(--ink)", border:"none", borderRadius:2, color:"var(--cream)",
+                fontFamily:"'Cormorant SC', serif", fontSize:"0.9rem", letterSpacing:"0.18em", cursor:"pointer" }}>
+              Opnieuw
+            </button>
+          </div>
+        )}
+        {!klaarVrij && <div style={{ paddingBottom:56 }}/>}
       </div>
     );
   }
