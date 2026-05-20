@@ -1,0 +1,1 @@
+$(cat /home/user/HifdGoal/dist/assets/index-CeIaSpnB.js)
