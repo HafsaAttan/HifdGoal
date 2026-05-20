@@ -43,10 +43,18 @@ const GLOBAL_CSS = `
   @keyframes rippleOut {
     to { transform: translate(-50%,-50%) scale(20); opacity: 0; }
   }
+  @keyframes orbPulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--gold-faint), 0 8px 32px rgba(196,147,58,0.18); }
+    50%       { box-shadow: 0 0 0 16px transparent, 0 8px 40px rgba(196,147,58,0.26); }
+  }
   @keyframes completePop {
     0%   { transform: scale(0.8); opacity: 0; }
     60%  { transform: scale(1.08); }
     100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
   }
 
   .stagger-1 { animation: fadeUp 0.5s ease both; }
@@ -55,11 +63,12 @@ const GLOBAL_CSS = `
   .stagger-4 { animation: fadeUp 0.5s 0.21s ease both; }
   .stagger-5 { animation: fadeUp 0.5s 0.28s ease both; }
 
+  .orb-idle { animation: orbPulse 3s ease-in-out infinite; }
   .complete-pop { animation: completePop 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
 
   .nav-btn {
     font-family: 'Cormorant SC', serif;
-    font-size: 0.78rem;
+    font-size: 0.58rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--ink-muted);
@@ -86,12 +95,13 @@ const GLOBAL_CSS = `
   .pill {
     display: inline-block;
     font-family: 'Cormorant SC', serif;
-    font-size: 0.68rem;
+    font-size: 0.5rem;
     letter-spacing: 0.18em;
     border-radius: 2px;
     padding: 3px 8px;
   }
 
+  /* Paper texture overlay */
   .paper::before {
     content: '';
     position: fixed;
@@ -115,55 +125,11 @@ const styleEl = document.createElement("style");
 styleEl.textContent = GLOBAL_CSS;
 document.head.appendChild(styleEl);
 
-/* ─── Helpers ───────────────────────────────────────────────────────────────── */
-function getTodayKey() { return new Date().toISOString().split("T")[0]; }
-
-function vibrate(pattern) {
-  if (navigator.vibrate) navigator.vibrate(pattern);
-}
-
-function getDutchDateTime() {
-  const now = new Date();
-  const datum = now.toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
-  const tijd  = now.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
-  return { datum, tijd };
-}
-
-function getHijriDate() {
-  try {
-    return new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
-      day: "numeric", month: "long", year: "numeric"
-    }).format(new Date());
-  } catch { return ""; }
-}
-
-/* ─── Storage ───────────────────────────────────────────────────────────────── */
-async function loadStorage() {
-  try {
-    if (window.storage) {
-      const r = await window.storage.get("adkhar-progress-v2");
-      return r ? JSON.parse(r.value) : {};
-    }
-    const raw = localStorage.getItem("adkhar-progress-v2");
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
-}
-
-async function saveStorage(data) {
-  try {
-    if (window.storage) {
-      await window.storage.set("adkhar-progress-v2", JSON.stringify(data));
-    } else {
-      localStorage.setItem("adkhar-progress-v2", JSON.stringify(data));
-    }
-  } catch {}
-}
-
 /* ─── Data ──────────────────────────────────────────────────────────────────── */
 const ADKHAR = {
   ochtend: [
     { id:"o1", arabic:"اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ", fonetisch:"Allahu laa ilaaha illaa Huwal-Hayyul-Qayyoom, laa ta'khudhuhu sinatun wa laa nawm...", vertaling:"Allah — er is geen god dan Hij, de Eeuwig Levende, de Zelfbestaande. Sluimer noch slaap overvalt Hem...", aantal:1, categorie:"Koran", beloning:"Wie Ayat Al-Kursi reciteert na elke verplichte salah — niets belet hem het Paradijs te betreden behalve de dood. (An-Nasa'i)" },
-    { id:"o2", arabic:"قُلْ هُوَ ٱللَّهُ أَحَدٌ ۝ ٱللَّهُ ٱلصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌ", fonetisch:"Qul huwa Allahu ahad. Allahus-Samad. Lam yalid wa lam yoolad. Wa lam yakun lahu kufuwan ahad.", vertaling:"Zeg: Hij is Allah, de Enige. Allah, de Eeuwige Toevlucht. Hij heeft niet verwekt, noch is Hij verwekt.", aantal:3, categorie:"Koran", beloning:"Al-Ikhlas is gelijkwaardig aan een derde van de Koran. (Bukhari & Muslim)" },
+    { id:"o2", arabic:"قُلْ هُوَ ٱللَّهُ أَحَدٌ ۝ ٱللَّهُ ٱلصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌ", fonetisch:"Qul huwa Allahu ahad. Allahus-Samad. Lam yalid wa lam yoolad. Wa lam yakun lahu kufuwan ahad.", vertaling:"Zeg: Hij is Allah, de Enige. Allah, de Eeuwige Toevlucht. Hij heeft niet verwekt, noch is Hij verwekt. En niemand is Hem gelijkwaardig.", aantal:3, categorie:"Koran", beloning:"Al-Ikhlas is gelijkwaardig aan een derde van de Koran. (Bukhari & Muslim)" },
     { id:"o3", arabic:"قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ ۝ مِن شَرِّ مَا خَلَقَ ۝ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِن شَرِّ ٱلنَّفَّـٰثَـٰتِ فِى ٱلْعُقَدِ ۝ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ", fonetisch:"Qul a'oodhu birabbi al-falaq...", vertaling:"Zeg: Ik zoek bescherming bij de Heer van de dageraad. Tegen het kwaad van wat Hij heeft geschapen...", aantal:3, categorie:"Koran", beloning:null },
     { id:"o4", arabic:"قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ ۝ مَلِكِ ٱلنَّاسِ ۝ إِلَـٰهِ ٱلنَّاسِ ۝ مِن شَرِّ ٱلْوَسْوَاسِ ٱلْخَنَّاسِ", fonetisch:"Qul a'oodhu birabbi an-naas. Maliki an-naas. Ilaahi an-naas...", vertaling:"Zeg: Ik zoek bescherming bij de Heer van de mensen. De Koning van de mensen. De God van de mensen...", aantal:3, categorie:"Koran", beloning:null },
     { id:"o5", arabic:"أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ", fonetisch:"Asbahnaa wa asbahal-mulku lillaahi walhamdu lillaahi, laa ilaaha illallaahu wahdahu laa shareeka lahu...", vertaling:"Wij zijn de ochtend ingegaan en het koninkrijk behoort Allah toe. Alle lof is voor Allah...", aantal:1, categorie:"Dhikr", beloning:null },
@@ -216,63 +182,37 @@ const ADKHAR = {
 
 /* ─── Category config ──────────────────────────────────────────────────────── */
 const CAT = {
-  Koran:      { accent:"#C4933A", bg:"#FBF6EC", pill:"#F5E9C8", pillText:"#7A5A18" },
-  Dhikr:      { accent:"#2A5278", bg:"#EEF5FC", pill:"#D6E8F5", pillText:"#1E3A5A" },
-  Tasbeeh:    { accent:"#5A3A7A", bg:"#F3EEF9", pill:"#E3D9F2", pillText:"#3E2556" },
-  Istighfaar: { accent:"#7A4020", bg:"#FBF0E8", pill:"#F5D9C5", pillText:"#5A2E14" },
-  Salawaat:   { accent:"#2A6B52", bg:"#EBF7F2", pill:"#C5EAD8", pillText:"#1A4A38" },
+  Koran:      { accent:"#C4933A", bg:"#FBF6EC", pill:"#F5E9C8", pillText:"#7A5A18", dot:"#C4933A" },
+  Dhikr:      { accent:"#2A5278", bg:"#EEF5FC", pill:"#D6E8F5", pillText:"#1E3A5A", dot:"#2A5278" },
+  Tasbeeh:    { accent:"#5A3A7A", bg:"#F3EEF9", pill:"#E3D9F2", pillText:"#3E2556", dot:"#5A3A7A" },
+  Istighfaar: { accent:"#7A4020", bg:"#FBF0E8", pill:"#F5D9C5", pillText:"#5A2E14", dot:"#7A4020" },
+  Salawaat:   { accent:"#2A6B52", bg:"#EBF7F2", pill:"#C5EAD8", pillText:"#1A4A38", dot:"#2A6B52" },
 };
 
-/* ─── Kalender dagring (Apple Watch stijl) ──────────────────────────────────── */
-function DagRing({ date, allData }) {
-  const dayKey  = date.toISOString().split("T")[0];
-  const todayKey = new Date().toISOString().split("T")[0];
-  const dayData  = allData[dayKey] || {};
+function getTodayKey() { return new Date().toISOString().split("T")[0]; }
 
-  const ochPct = ADKHAR.ochtend.filter(d => dayData[`${dayKey}-${d.id}`]).length / ADKHAR.ochtend.length;
-  const avPct  = ADKHAR.avond.filter(d => dayData[`${dayKey}-${d.id}`]).length / ADKHAR.avond.length;
-
-  const RO = 20, RI = 12;
-  const CO = 2 * Math.PI * RO, CI = 2 * Math.PI * RI;
-
-  const isToday   = dayKey === todayKey;
-  const isFuture  = dayKey > todayKey;
-  const dagNaam   = date.toLocaleDateString("nl-NL", { weekday: "short" }).slice(0, 2).toUpperCase();
-  const dagNum    = date.getDate();
-
-  return (
-    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, opacity: isFuture ? 0.25 : 1 }}>
-      <div style={{ position:"relative", width:50, height:50 }}>
-        <svg width="50" height="50" style={{ transform:"rotate(-90deg)" }}>
-          {/* buitenste ring: ochtend */}
-          <circle cx="25" cy="25" r={RO} fill="none" stroke="#C4933A20" strokeWidth="4"/>
-          <circle cx="25" cy="25" r={RO} fill="none" stroke="#C4933A" strokeWidth="4"
-            strokeLinecap="round"
-            strokeDasharray={CO}
-            strokeDashoffset={CO * (1 - ochPct)}
-            style={{ transition:"stroke-dashoffset 0.5s ease" }}
-          />
-          {/* binnenste ring: avond */}
-          <circle cx="25" cy="25" r={RI} fill="none" stroke="#2A527820" strokeWidth="4"/>
-          <circle cx="25" cy="25" r={RI} fill="none" stroke="#2A5278" strokeWidth="4"
-            strokeLinecap="round"
-            strokeDasharray={CI}
-            strokeDashoffset={CI * (1 - avPct)}
-            style={{ transition:"stroke-dashoffset 0.5s ease" }}
-          />
-        </svg>
-      </div>
-      <div style={{ textAlign:"center" }}>
-        <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.65rem", letterSpacing:"0.06em",
-          color: isToday ? "var(--gold)" : "var(--ink-faint)" }}>{dagNaam}</div>
-        <div style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"0.9rem",
-          color: isToday ? "var(--ink)" : "var(--ink-muted)", fontWeight: isToday ? 600 : 400 }}>{dagNum}</div>
-      </div>
-    </div>
-  );
+async function loadStorage() {
+  try {
+    if (window.storage) {
+      const r = await window.storage.get("adkhar-progress-v2");
+      return r ? JSON.parse(r.value) : {};
+    }
+    const raw = localStorage.getItem("adkhar-progress-v2");
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
 }
 
-/* ─── Ornament ──────────────────────────────────────────────────────────────── */
+async function saveStorage(data) {
+  try {
+    if (window.storage) {
+      await window.storage.set("adkhar-progress-v2", JSON.stringify(data));
+    } else {
+      localStorage.setItem("adkhar-progress-v2", JSON.stringify(data));
+    }
+  } catch {}
+}
+
+/* ─── Ornament SVG ─────────────────────────────────────────────────────────── */
 function Ornament({ color = "#C4933A", opacity = 0.35 }) {
   return (
     <svg width="60" height="10" viewBox="0 0 60 10" fill="none" style={{ display:"block" }}>
@@ -285,36 +225,26 @@ function Ornament({ color = "#C4933A", opacity = 0.35 }) {
   );
 }
 
-/* ─── Main App ──────────────────────────────────────────────────────────────── */
+/* ─── Main App ─────────────────────────────────────────────────────────────── */
 export default function AdkharApp() {
-  const [sessie, setSessie]           = useState("ochtend");
+  const [sessie, setSessie]         = useState("ochtend");
   const [huidigIndex, setHuidigIndex] = useState(0);
-  const [teller, setTeller]           = useState(0);
-  const [voltooid, setVoltooid]       = useState({});
-  const [allData, setAllData]         = useState({});
-  const [ripples, setRipples]         = useState([]);
-  const [klaar, setKlaar]             = useState(false);
-  const [geladen, setGeladen]         = useState(false);
-  const [scherm, setScherm]           = useState("home");
-  const [beloningOpen, setBeloningOpen] = useState(false);
-  const [tijd, setTijd]               = useState(getDutchDateTime());
+  const [teller, setTeller]         = useState(0);
+  const [voltooid, setVoltooid]     = useState({});
+  const [ripples, setRipples]       = useState([]);
+  const [klaar, setKlaar]           = useState(false);
+  const [geladen, setGeladen]       = useState(false);
+  const [scherm, setScherm]         = useState("home");
+  const [beloningOpen, setBeloningOpen]   = useState(false);
+  const [fonetischOpen, setFonetischOpen] = useState(false);
+  const [vertalingOpen, setVertalingOpen] = useState(false);
 
   const adkharLijst = ADKHAR[sessie];
   const huidig      = adkharLijst[huidigIndex];
   const todayKey    = getTodayKey();
 
-  // Klok elke minuut bijwerken
   useEffect(() => {
-    const id = setInterval(() => setTijd(getDutchDateTime()), 60_000);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    loadStorage().then(d => {
-      setAllData(d);
-      if (d[todayKey]) setVoltooid(d[todayKey]);
-      setGeladen(true);
-    });
+    loadStorage().then(d => { if (d[todayKey]) setVoltooid(d[todayKey]); setGeladen(true); });
   }, []);
 
   const slaOp = useCallback(async (nv) => {
@@ -323,128 +253,83 @@ export default function AdkharApp() {
     const keys = Object.keys(data).sort();
     if (keys.length > 30) delete data[keys[0]];
     await saveStorage(data);
-    setAllData(prev => ({ ...prev, [todayKey]: nv }));
   }, [todayKey]);
 
   const startSessie = (type) => {
     setSessie(type);
-    const lijst  = ADKHAR[type];
+    const lijst = ADKHAR[type];
     const eerste = lijst.findIndex(d => !voltooid[`${todayKey}-${d.id}`]);
     setHuidigIndex(eerste === -1 ? 0 : eerste);
-    setTeller(0); setKlaar(false); setBeloningOpen(false); setScherm("sessie");
+    setTeller(0); setKlaar(false); setBeloningOpen(false); setFonetischOpen(false); setVertalingOpen(false); setScherm("sessie");
   };
 
   const handleTik = useCallback((e) => {
     if (klaar) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const id   = Date.now();
+    const id = Date.now();
     setRipples(p => [...p, { id, x: e.clientX - rect.left, y: e.clientY - rect.top }]);
     setTimeout(() => setRipples(p => p.filter(r => r.id !== id)), 800);
-
-    vibrate(30);
 
     const nt = teller + 1;
     setTeller(nt);
     if (nt >= huidig.aantal) {
       const nv = { ...voltooid, [`${todayKey}-${huidig.id}`]: true };
       setVoltooid(nv); slaOp(nv);
-      vibrate([60, 30, 60]);
       setTimeout(() => {
-        if (huidigIndex < adkharLijst.length - 1) {
-          setHuidigIndex(huidigIndex + 1); setTeller(0); setBeloningOpen(false);
-        } else {
-          setKlaar(true);
-          vibrate([80, 40, 80, 40, 120]);
-        }
+        if (huidigIndex < adkharLijst.length - 1) { setHuidigIndex(huidigIndex + 1); setTeller(0); setBeloningOpen(false); }
+        else setKlaar(true);
       }, 450);
     }
   }, [teller, huidig, huidigIndex, adkharLijst, voltooid, klaar, todayKey, slaOp]);
 
-  const gaanNaar = (i) => {
-    setHuidigIndex(i); setTeller(0); setKlaar(false); setBeloningOpen(false);
-  };
-
-  const voltVandaag = (type) =>
-    ADKHAR[type].filter(d => voltooid[`${todayKey}-${d.id}`]).length;
-
-  // Laatste 7 dagen voor kalender
-  const kalenderDagen = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return d;
-  });
+  const gaanNaar = (i) => { setHuidigIndex(i); setTeller(0); setKlaar(false); setBeloningOpen(false); setFonetischOpen(false); setVertalingOpen(false); };
+  const voltVandaag = (type) => ADKHAR[type].filter(d => voltooid[`${todayKey}-${d.id}`]).length;
 
   /* ── Loading ── */
   if (!geladen) return (
     <div style={{ minHeight:"100vh", background:"var(--cream)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <div style={{ fontFamily:"'Cormorant Garamond', Georgia, serif", fontSize:"0.8rem", color:"var(--ink-faint)", letterSpacing:"0.2em" }}>laden…</div>
+      <div style={{ fontFamily:"'Cormorant Garamond', Georgia, serif", fontSize:"0.8rem", color:"var(--ink-faint)", letterSpacing:"0.2em" }}>
+        laden…
+      </div>
     </div>
   );
 
-  /* ═══════════════════════ HOME ═══════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════════════════════
+     HOME
+  ═══════════════════════════════════════════════════════════════════════════ */
   if (scherm === "home") {
     const ochV = voltVandaag("ochtend"), avV = voltVandaag("avond");
-    const hijri = getHijriDate();
+    const datum = new Date().toLocaleDateString("nl-NL", { weekday:"long", day:"numeric", month:"long" });
 
     const sessions = [
-      { type:"ochtend", arabisch:"أذكار الصباح", label:"Ochtendadhkaar", sub:"Na Fajr · tot zonsopgang", volt:ochV, totaal:ADKHAR.ochtend.length, accent:"#C4933A" },
-      { type:"avond",   arabisch:"أذكار المساء",  label:"Avondadhkaar",   sub:"Na Asr · tot Maghrib",   volt:avV,  totaal:ADKHAR.avond.length,   accent:"#2A5278" },
+      { type:"ochtend", arabisch:"أذكار الصباح", label:"Ochtendhkaar", sub:"Na Fajr · tot zonsopgang", volt:ochV, totaal:ADKHAR.ochtend.length, accent:"#C4933A" },
+      { type:"avond",   arabisch:"أذكار المساء",  label:"Avondadhkaar",  sub:"Na Asr · tot Maghrib",   volt:avV,  totaal:ADKHAR.avond.length,   accent:"#2A5278" },
     ];
 
     return (
       <div className="paper" style={{ minHeight:"100vh", background:"var(--cream)", fontFamily:"'Cormorant Garamond', Georgia, serif", display:"flex", flexDirection:"column" }}>
 
-        {/* ── Top bar ── */}
-        <div style={{ display:"flex", justifyContent:"flex-end", padding:"44px 28px 0", animation:"fadeIn 0.6s ease" }}>
-          <button className="nav-btn" style={{ fontSize:"0.72rem" }} onClick={() => setScherm("overzicht")}>Overzicht</button>
+        {/* ── Top strip: date left, overzicht right ── */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"44px 28px 0", animation:"fadeIn 0.6s ease" }}>
+          <div style={{ fontFamily:"'Cormorant Garamond', serif", fontStyle:"italic", fontSize:"0.78rem", color:"var(--ink-muted)" }}>{datum}</div>
+          <button className="nav-btn" style={{ fontSize:"0.54rem" }} onClick={() => setScherm("overzicht")}>Overzicht</button>
         </div>
 
-        {/* ── Begroeting ── */}
-        <div style={{ padding:"24px 28px 0", animation:"fadeUp 0.6s ease both" }}>
-          <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"2rem", color:"var(--ink)", direction:"rtl", textAlign:"right", lineHeight:1.3 }}>
-            السلام عليكم
-          </div>
-          <div style={{ marginTop:6, fontSize:"1.5rem", color:"var(--ink-soft)", fontWeight:300 }}>Hafsa</div>
-          <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:2 }}>
-            <div style={{ fontSize:"0.95rem", color:"var(--ink-muted)", fontStyle:"italic" }}>
-              {tijd.datum} · {tijd.tijd}
+        {/* ── Hero block ── */}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", padding:"32px 28px 0", textAlign:"center" }}>
+          <div style={{ animation:"fadeUp 0.7s ease both" }}>
+            <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"4rem", color:"var(--ink)", lineHeight:1.15, direction:"rtl", marginBottom:16 }}>
+              الأذكار
             </div>
-            {hijri && (
-              <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"0.95rem", color:"var(--ink-faint)", direction:"rtl", textAlign:"right" }}>
-                {hijri}
-              </div>
-            )}
-          </div>
-          <div style={{ marginTop:14 }}>
-            <Ornament color="#C4933A" opacity={0.4}/>
-          </div>
-        </div>
-
-        {/* ── Kalenderstrip ── */}
-        <div style={{ padding:"24px 28px 0", animation:"fadeUp 0.6s 0.08s ease both" }}>
-          <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.7rem", color:"var(--ink-faint)", letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:14 }}>
-            Voortgang · 7 dagen
-          </div>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
-            {kalenderDagen.map((d, i) => (
-              <DagRing key={i} date={d} allData={allData} />
-            ))}
-          </div>
-          {/* Legenda */}
-          <div style={{ display:"flex", gap:16, marginTop:12 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:"#C4933A" }}/>
-              <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.68rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Ochtend</span>
-            </div>
-            <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:"#2A5278" }}/>
-              <span style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.68rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>Avond</span>
+            <Ornament color="#C4933A" opacity={0.5}/>
+            <div style={{ marginTop:12, fontFamily:"'Cormorant SC', serif", fontSize:"0.58rem", color:"var(--ink-faint)", letterSpacing:"0.4em", textTransform:"uppercase" }}>
+              Ochtend &amp; Avond
             </div>
           </div>
         </div>
 
-        {/* ── Sessiekaarten ── */}
-        <div style={{ padding:"32px 0 0" }}>
+        {/* ── Session blocks: full-width stacked ── */}
+        <div style={{ padding:"40px 0 0" }}>
           {sessions.map((s, i) => {
             const pct  = s.volt / s.totaal;
             const done = s.volt === s.totaal;
@@ -455,9 +340,11 @@ export default function AdkharApp() {
                 style={{
                   borderTop: i === 0 ? "1px solid var(--cream-deep)" : "none",
                   borderBottom: "1px solid var(--cream-deep)",
-                  padding:"22px 28px",
+                  padding:"24px 28px",
                   cursor:"pointer",
-                  display:"flex", alignItems:"center", gap:20,
+                  display:"flex",
+                  alignItems:"center",
+                  gap:20,
                   transition:"background 0.2s",
                   animation:`fadeUp 0.55s ${0.15 + i*0.1}s ease both`,
                   background:"transparent",
@@ -465,6 +352,7 @@ export default function AdkharApp() {
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.6)"}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
+                {/* Left: radial progress circle */}
                 <div style={{ flexShrink:0, position:"relative", width:52, height:52 }}>
                   <svg width="52" height="52" style={{ transform:"rotate(-90deg)" }}>
                     <circle cx="26" cy="26" r="22" fill="none" stroke={s.accent+"18"} strokeWidth="3"/>
@@ -478,44 +366,53 @@ export default function AdkharApp() {
                   <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                     {done
                       ? <span style={{ fontSize:"0.85rem", color:s.accent }}>✓</span>
-                      : <span style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"0.85rem", color:s.accent, fontWeight:500 }}>{Math.round(pct*100)}%</span>
+                      : <span style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"0.72rem", color:s.accent, fontWeight:500 }}>{Math.round(pct*100)}%</span>
                     }
                   </div>
                 </div>
+
+                {/* Middle: text */}
                 <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.1rem", color:"var(--ink-soft)", direction:"rtl", marginBottom:4 }}>{s.arabisch}</div>
+                  <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.15rem", color:"var(--ink-soft)", direction:"rtl", marginBottom:4 }}>{s.arabisch}</div>
                   <div style={{ fontSize:"0.9rem", color:"var(--ink)", fontWeight:500, marginBottom:2 }}>{s.label}</div>
-                  <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.72rem", color:"var(--ink-faint)", letterSpacing:"0.05em" }}>{s.sub} · {s.volt}/{s.totaal}</div>
+                  <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.56rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>{s.sub} · {s.volt}/{s.totaal}</div>
                 </div>
+
+                {/* Right: arrow */}
                 <div style={{ flexShrink:0, fontFamily:"'Cormorant SC', serif", fontSize:"0.7rem", color:"var(--ink-faint)" }}>→</div>
               </div>
             );
           })}
         </div>
 
+        {/* ── Bottom spacer ── */}
         <div style={{ paddingBottom:56 }}/>
       </div>
     );
   }
 
-  /* ═══════════════════════ OVERZICHT ══════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════════════════════
+     OVERZICHT
+  ═══════════════════════════════════════════════════════════════════════════ */
   if (scherm === "overzicht") {
     return (
       <div style={{ minHeight:"100vh", background:"var(--cream)", fontFamily:"'Cormorant Garamond', Georgia, serif" }}>
+        {/* Nav */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"52px 24px 28px" }}>
           <button className="nav-btn" onClick={() => setScherm("home")}>← Terug</button>
-          <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.8rem", color:"var(--ink-soft)", letterSpacing:"0.15em", textTransform:"uppercase" }}>Overzicht Vandaag</div>
+          <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.65rem", color:"var(--ink-soft)", letterSpacing:"0.2em", textTransform:"uppercase" }}>Overzicht Vandaag</div>
           <div style={{ width:60 }}/>
         </div>
 
         {["ochtend", "avond"].map((type) => (
           <div key={type} style={{ padding:"0 20px", maxWidth:440, margin:"0 auto 44px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14, padding:"0 4px" }}>
-              <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.75rem", color:"var(--ink-muted)", letterSpacing:"0.18em", textTransform:"uppercase" }}>
+              <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.6rem", color:"var(--ink-muted)", letterSpacing:"0.25em", textTransform:"uppercase" }}>
                 {type === "ochtend" ? "🌅 Ochtend" : "🌙 Avond"}
               </div>
               <div style={{ flex:1, height:1, background:"linear-gradient(90deg, var(--cream-deep), transparent)" }}/>
             </div>
+
             {ADKHAR[type].map((d, i) => {
               const isVolt = voltooid[`${todayKey}-${d.id}`];
               const c = CAT[d.categorie] || CAT.Dhikr;
@@ -530,12 +427,12 @@ export default function AdkharApp() {
                     {isVolt ? "✓" : ""}
                   </div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.05rem", color: isVolt ? "var(--ink-muted)" : "var(--ink-soft)", marginBottom:4, direction:"rtl", textAlign:"right", lineHeight:1.6 }}>
+                    <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"0.95rem", color: isVolt ? "var(--ink-muted)" : "var(--ink-soft)", marginBottom:4, direction:"rtl", textAlign:"right", lineHeight:1.6 }}>
                       {d.arabic.length > 60 ? d.arabic.slice(0,60)+"…" : d.arabic}
                     </div>
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                       <span className="pill" style={{ background:c.pill, color:c.pillText }}>{d.categorie}</span>
-                      <span style={{ fontSize:"0.75rem", color:"var(--ink-faint)", fontFamily:"'Cormorant SC', serif" }}>{d.aantal}×</span>
+                      <span style={{ fontSize:"0.6rem", color:"var(--ink-faint)", fontFamily:"'Cormorant SC', serif" }}>{d.aantal}×</span>
                     </div>
                   </div>
                 </div>
@@ -547,7 +444,9 @@ export default function AdkharApp() {
     );
   }
 
-  /* ═══════════════════════ SESSIE ═════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════════════════════
+     SESSIE
+  ═══════════════════════════════════════════════════════════════════════════ */
   const voltAantal = adkharLijst.filter(d => voltooid[`${todayKey}-${d.id}`]).length;
   const isVolt     = voltooid[`${todayKey}-${huidig.id}`];
   const c          = CAT[huidig.categorie] || CAT.Dhikr;
@@ -558,19 +457,22 @@ export default function AdkharApp() {
   return (
     <div style={{ minHeight:"100vh", background:"var(--cream)", display:"flex", flexDirection:"column", fontFamily:"'Cormorant Garamond', Georgia, serif", userSelect:"none" }}>
 
+      {/* Top bar */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"50px 24px 0" }}>
         <button className="nav-btn" onClick={() => setScherm("home")}>← Home</button>
-        <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.75rem", color:"var(--ink-muted)", letterSpacing:"0.12em" }}>
+        <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.6rem", color:"var(--ink-muted)", letterSpacing:"0.18em" }}>
           {sessie === "ochtend" ? "🌅" : "🌙"} {huidigIndex + 1} / {adkharLijst.length}
         </div>
         <button className="nav-btn" onClick={() => setScherm("overzicht")}>Lijst</button>
       </div>
 
+      {/* Progress bar */}
       <div style={{ height:2, background:"var(--cream-deep)", margin:"14px 24px 0", borderRadius:1 }}>
         <div style={{ height:"100%", width:`${(voltAantal/adkharLijst.length)*100}%`, background:`linear-gradient(90deg, ${c.accent}88, ${c.accent})`, borderRadius:1, transition:"width 0.5s ease" }}/>
       </div>
 
       {klaar ? (
+        /* ── Completion Screen ── */
         <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"0 36px", textAlign:"center" }}>
           <div className="complete-pop" style={{ width:76, height:76, borderRadius:"50%", background:"linear-gradient(135deg, #D4EAD9, #B8E0C2)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.8rem", marginBottom:28, boxShadow:"0 8px 32px rgba(74,124,89,0.2)" }}>
             ✓
@@ -578,52 +480,58 @@ export default function AdkharApp() {
           <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"2rem", color:"var(--ink)", marginBottom:10, direction:"rtl" }}>بارك الله فيك</div>
           <div className="session-divider" style={{ marginBottom:18 }}/>
           <div style={{ fontSize:"1rem", color:"var(--ink-soft)", marginBottom:8 }}>Alle {sessie}adhkaar voltooid</div>
-          <div style={{ fontSize:"0.95rem", color:"var(--ink-muted)", fontStyle:"italic", marginBottom:52 }}>Moge Allah het van jou aanvaarden</div>
+          <div style={{ fontSize:"0.8rem", color:"var(--ink-muted)", fontStyle:"italic", marginBottom:52 }}>Moge Allah het van jou aanvaarden</div>
           <button
             onClick={() => setScherm("home")}
-            style={{ padding:"14px 40px", background:"var(--ink)", border:"none", borderRadius:2, color:"var(--cream)", fontFamily:"'Cormorant SC', serif", fontSize:"0.78rem", letterSpacing:"0.18em", textTransform:"uppercase", cursor:"pointer" }}
+            style={{ padding:"14px 40px", background:"var(--ink)", border:"none", borderRadius:2, color:"var(--cream)", fontFamily:"'Cormorant SC', serif", fontSize:"0.62rem", letterSpacing:"0.22em", textTransform:"uppercase", cursor:"pointer" }}
           >
             Terug naar home
           </button>
         </div>
       ) : (
         <>
+          {/* Category pill */}
           <div className="stagger-1" style={{ padding:"22px 26px 0" }}>
             <span className="pill" style={{ background:c.pill, color:c.pillText }}>{huidig.categorie}</span>
           </div>
 
+          {/* Arabic text */}
           <div className="stagger-2" style={{ padding:"18px 26px 0", direction:"rtl" }}>
             <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.8rem", lineHeight:2.1, color:"var(--ink)", textAlign:"right" }}>
               {huidig.arabic}
             </div>
           </div>
 
+          {/* Divider */}
           <div className="stagger-3" style={{ padding:"14px 26px 0" }}>
             <div style={{ height:1, background:`linear-gradient(90deg, ${c.accent}30, transparent)` }}/>
           </div>
 
+          {/* Phonetic */}
           <div className="stagger-3" style={{ padding:"12px 26px 0" }}>
-            <div style={{ fontSize:"0.97rem", color:"var(--ink-muted)", fontStyle:"italic", lineHeight:1.85 }}>
+            <div style={{ fontSize:"0.82rem", color:"var(--ink-muted)", fontStyle:"italic", lineHeight:1.85 }}>
               {huidig.fonetisch}
             </div>
           </div>
 
+          {/* Translation */}
           <div className="stagger-4" style={{ padding:"8px 26px 0" }}>
-            <div style={{ fontSize:"0.97rem", color:"var(--ink-faint)", lineHeight:1.9 }}>
+            <div style={{ fontSize:"0.82rem", color:"var(--ink-faint)", lineHeight:1.9 }}>
               {huidig.vertaling}
             </div>
           </div>
 
+          {/* Reward toggle */}
           {huidig.beloning && (
             <div className="stagger-5" style={{ padding:"16px 26px 0" }}>
               <button
                 onClick={() => setBeloningOpen(!beloningOpen)}
-                style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.72rem", color:c.accent, letterSpacing:"0.12em", textTransform:"uppercase" }}
+                style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.54rem", color:c.accent, letterSpacing:"0.16em", textTransform:"uppercase" }}
               >
                 ✦ {beloningOpen ? "Verberg beloning" : "Beloning"}
               </button>
               {beloningOpen && (
-                <div style={{ marginTop:10, padding:"14px 18px", background:c.bg, border:`1px solid ${c.accent}20`, borderRadius:2, fontSize:"0.93rem", color:"var(--ink-soft)", lineHeight:1.8, fontStyle:"italic", animation:"fadeUp 0.3s ease" }}>
+                <div style={{ marginTop:10, padding:"14px 18px", background:c.bg, border:`1px solid ${c.accent}20`, borderRadius:2, fontSize:"0.8rem", color:"var(--ink-soft)", lineHeight:1.8, fontStyle:"italic", animation:"fadeUp 0.3s ease" }}>
                   {huidig.beloning}
                 </div>
               )}
@@ -632,14 +540,18 @@ export default function AdkharApp() {
 
           <div style={{ flex:1, minHeight:16 }}/>
 
-          {/* Tikzone */}
+          {/* ── Tap zone ── */}
           <div
             onClick={handleTik}
             style={{
-              position:"relative", margin:"0 20px 20px", borderRadius:4,
-              background: isVolt ? "linear-gradient(160deg, #EBF7F2, #F5FBF7)" : "linear-gradient(160deg, #FFFFFF, #FDFBF7)",
+              position:"relative", margin:"0 20px 20px",
+              borderRadius:4,
+              background: isVolt
+                ? "linear-gradient(160deg, #EBF7F2, #F5FBF7)"
+                : "linear-gradient(160deg, #FFFFFF, #FDFBF7)",
               border:`1px solid ${isVolt ? "#86EFAC55" : c.accent+"20"}`,
-              padding:"32px 24px", cursor:"pointer", overflow:"hidden",
+              padding:"32px 24px",
+              cursor:"pointer", overflow:"hidden",
               display:"flex", flexDirection:"column", alignItems:"center", gap:16,
               boxShadow:"0 2px 16px rgba(0,0,0,0.05)",
               WebkitTapHighlightColor:"transparent",
@@ -649,6 +561,7 @@ export default function AdkharApp() {
               <div key={r.id} style={{ position:"absolute", left:r.x, top:r.y, width:12, height:12, background:c.accent+"25", borderRadius:"50%", transform:"translate(-50%,-50%) scale(0)", animation:"rippleOut 0.8s ease-out forwards", pointerEvents:"none" }}/>
             ))}
 
+            {/* SVG ring counter */}
             <div style={{ position:"relative", width:96, height:96 }}>
               <svg width="96" height="96" style={{ transform:"rotate(-90deg)" }}>
                 <circle cx="48" cy="48" r={R} fill="none" stroke={c.accent+"18"} strokeWidth="4"/>
@@ -665,7 +578,7 @@ export default function AdkharApp() {
                 ) : (
                   <>
                     <div style={{ fontSize:"2rem", fontWeight:300, color:c.accent, lineHeight:1, fontFamily:"'Cormorant Garamond', serif" }}>{restant}</div>
-                    <div style={{ fontSize:"0.68rem", color:"var(--ink-faint)", letterSpacing:"0.08em", fontFamily:"'Cormorant SC', serif", marginTop:1 }}>
+                    <div style={{ fontSize:"0.5rem", color:"var(--ink-faint)", letterSpacing:"0.1em", fontFamily:"'Cormorant SC', serif", marginTop:1 }}>
                       {restant === huidig.aantal ? `${huidig.aantal}×` : "resterend"}
                     </div>
                   </>
@@ -673,12 +586,12 @@ export default function AdkharApp() {
               </div>
             </div>
 
-            <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.75rem", color:"var(--ink-faint)", letterSpacing:"0.12em", textTransform:"uppercase" }}>
+            <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.58rem", color:"var(--ink-faint)", letterSpacing:"0.18em", textTransform:"uppercase" }}>
               {isVolt ? "Voltooid · tik om verder" : `${teller} / ${huidig.aantal} · tik om te tellen`}
             </div>
           </div>
 
-          {/* Navigatie */}
+          {/* Navigation */}
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"0 26px 48px" }}>
             <button
               className="nav-btn"
@@ -686,16 +599,20 @@ export default function AdkharApp() {
               style={{ opacity: huidigIndex > 0 ? 1 : 0.3, cursor: huidigIndex > 0 ? "pointer" : "default" }}
             >← Vorige</button>
 
+            {/* Dot progress */}
             <div style={{ display:"flex", gap:5, alignItems:"center" }}>
               {adkharLijst.slice(Math.max(0, huidigIndex-2), Math.min(adkharLijst.length, huidigIndex+3)).map((d, i) => {
                 const absI = Math.max(0, huidigIndex-2) + i;
                 const isActive = absI === huidigIndex;
-                const isDone   = voltooid[`${todayKey}-${d.id}`];
+                const isDone = voltooid[`${todayKey}-${d.id}`];
                 return (
                   <div key={d.id} onClick={() => gaanNaar(absI)} style={{
-                    width: isActive ? 18 : 6, height:6, borderRadius:3,
+                    width: isActive ? 18 : 6,
+                    height: 6,
+                    borderRadius: 3,
                     background: isActive ? c.accent : isDone ? c.accent+"55" : "var(--cream-deep)",
-                    cursor:"pointer", transition:"all 0.3s ease",
+                    cursor:"pointer",
+                    transition:"all 0.3s ease",
                   }}/>
                 );
               })}
