@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 
 /* ─── Google Fonts ─────────────────────────────────────────────────────────── */
 const FONT_LINK = document.createElement("link");
@@ -26,11 +26,25 @@ const GLOBAL_CSS = `
     --amber: #8B5E1A;
     --violet: #5A3A7A;
     --violet-light: #E8DFF5;
+    --card-bg: #FFFFFF;
+    --border: rgba(196,147,58,0.15);
+  }
+
+  body.dark {
+    --cream: #1A1712;
+    --cream-deep: #252018;
+    --ink: #F0EAE0;
+    --ink-soft: #D4CCB8;
+    --ink-muted: #9A8E7E;
+    --ink-faint: #5A5048;
+    --gold-faint: rgba(196,147,58,0.18);
+    --card-bg: #222018;
+    --border: rgba(196,147,58,0.2);
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-  body { background: var(--cream); }
+  body { background: var(--cream); transition: background 0.3s ease; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(14px); }
@@ -56,15 +70,15 @@ const GLOBAL_CSS = `
     0%   { background-position: -200% center; }
     100% { background-position:  200% center; }
   }
-
-  .stagger-1 { animation: fadeUp 0.5s ease both; }
-  .stagger-2 { animation: fadeUp 0.5s 0.07s ease both; }
-  .stagger-3 { animation: fadeUp 0.5s 0.14s ease both; }
-  .stagger-4 { animation: fadeUp 0.5s 0.21s ease both; }
-  .stagger-5 { animation: fadeUp 0.5s 0.28s ease both; }
+  @keyframes streakPop {
+    0%   { transform: scale(0.85); opacity: 0; }
+    70%  { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
 
   .orb-idle { animation: orbPulse 3s ease-in-out infinite; }
   .complete-pop { animation: completePop 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+  .streak-pop { animation: streakPop 0.5s 0.2s cubic-bezier(0.34,1.56,0.64,1) both; }
 
   .nav-btn {
     font-family: 'Cormorant SC', serif;
@@ -81,8 +95,8 @@ const GLOBAL_CSS = `
   .nav-btn:hover { color: var(--gold); }
 
   .dhikr-card {
-    background: #FFFFFF;
-    border: 1px solid rgba(196,147,58,0.15);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 3px;
     transition: box-shadow 0.25s, border-color 0.25s;
     cursor: pointer;
@@ -119,66 +133,401 @@ const GLOBAL_CSS = `
     background: linear-gradient(90deg, transparent, var(--gold), transparent);
     margin: 0 auto;
   }
+
+  /* Dark mode toggle */
+  .dark-toggle {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--cream-deep);
+    border: 1px solid var(--border);
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .dark-toggle.on { background: #3A2E1A; border-color: #C4933A55; }
+  .dark-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--ink-muted);
+    transition: transform 0.25s, background 0.25s;
+  }
+  .dark-toggle.on::after { transform: translateX(16px); background: #C4933A; }
 `;
 
 const styleEl = document.createElement("style");
 styleEl.textContent = GLOBAL_CSS;
 document.head.appendChild(styleEl);
 
-/* ─── Data ──────────────────────────────────────────────────────────────────── */
+/* ─── Data — volledige originele teksten ─────────────────────────────────── */
 const ADKHAR = {
   ochtend: [
-    { id:"o1", arabic:"اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ", fonetisch:"Allahu laa ilaaha illaa Huwal-Hayyul-Qayyoom, laa ta'khudhuhu sinatun wa laa nawm...", vertaling:"Allah — er is geen god dan Hij, de Eeuwig Levende, de Zelfbestaande. Sluimer noch slaap overvalt Hem...", aantal:1, categorie:"Koran", beloning:"Wie Ayat Al-Kursi reciteert na elke verplichte salah — niets belet hem het Paradijs te betreden behalve de dood. (An-Nasa'i)" },
-    { id:"o2", arabic:"قُلْ هُوَ ٱللَّهُ أَحَدٌ ۝ ٱللَّهُ ٱلصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌ", fonetisch:"Qul huwa Allahu ahad. Allahus-Samad. Lam yalid wa lam yoolad. Wa lam yakun lahu kufuwan ahad.", vertaling:"Zeg: Hij is Allah, de Enige. Allah, de Eeuwige Toevlucht. Hij heeft niet verwekt, noch is Hij verwekt. En niemand is Hem gelijkwaardig.", aantal:3, categorie:"Koran", beloning:"Al-Ikhlas is gelijkwaardig aan een derde van de Koran. (Bukhari & Muslim)" },
-    { id:"o3", arabic:"قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ ۝ مِن شَرِّ مَا خَلَقَ ۝ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِن شَرِّ ٱلنَّفَّـٰثَـٰتِ فِى ٱلْعُقَدِ ۝ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ", fonetisch:"Qul a'oodhu birabbi al-falaq...", vertaling:"Zeg: Ik zoek bescherming bij de Heer van de dageraad. Tegen het kwaad van wat Hij heeft geschapen...", aantal:3, categorie:"Koran", beloning:null },
-    { id:"o4", arabic:"قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ ۝ مَلِكِ ٱلنَّاسِ ۝ إِلَـٰهِ ٱلنَّاسِ ۝ مِن شَرِّ ٱلْوَسْوَاسِ ٱلْخَنَّاسِ", fonetisch:"Qul a'oodhu birabbi an-naas. Maliki an-naas. Ilaahi an-naas...", vertaling:"Zeg: Ik zoek bescherming bij de Heer van de mensen. De Koning van de mensen. De God van de mensen...", aantal:3, categorie:"Koran", beloning:null },
-    { id:"o5", arabic:"أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ", fonetisch:"Asbahnaa wa asbahal-mulku lillaahi walhamdu lillaahi, laa ilaaha illallaahu wahdahu laa shareeka lahu...", vertaling:"Wij zijn de ochtend ingegaan en het koninkrijk behoort Allah toe. Alle lof is voor Allah...", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"o6", arabic:"اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ", fonetisch:"Allaahumma bika asbahnaa, wa bika amsaynaa, wa bika nahyaa, wa bika namootu wa ilaykan-nushoor.", vertaling:"O Allah, door U zijn wij de ochtend ingegaan, door U de avond, door U leven wij en door U sterven wij — en tot U is de wederopstanding.", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"o7", arabic:"اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَـهَ إِلاَّ أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ", fonetisch:"Allaahumma Anta Rabbee laa ilaaha illaa Anta, khalaqtanee wa anaa 'abduka...", vertaling:"O Allah, U bent mijn Heer. Er is geen god dan U. U hebt mij geschapen en ik ben Uw dienaar...", aantal:1, categorie:"Dhikr", beloning:"Sayyid Al-Istighfaar — Wie dit 's ochtends zegt met overtuiging en vóór de avond sterft, behoort tot de mensen van het Paradijs. (Bukhari)" },
-    { id:"o8", arabic:"اللَّهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ", fonetisch:"Allaahumma innee asbaHtu ush-hiduka wa ush-hidu Hamalata 'arshika...", vertaling:"O Allah, ik roep U als getuige aan, en de dragers van Uw Troon, en Uw engelen en al Uw schepping...", aantal:4, categorie:"Dhikr", beloning:"Allah bevrijdt daarmee een kwart van de persoon van het Hellevuur. Wie het 4× zegt wordt volledig bevrijd. (Abu Dawud)" },
-    { id:"o9", arabic:"اللَّهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ", fonetisch:"Allaahumma maa asbaHa bee min ni'matin aw bi-ahadin min khalqika faminka wahdaka laa shareeka laka...", vertaling:"O Allah, welke gunst ik ook ontvang deze ochtend — die is uitsluitend van U. Alle lof is voor U.", aantal:1, categorie:"Dhikr", beloning:"Wie dit 's ochtends zegt heeft de dankbaarheidsplicht van die dag vervuld. (Abu Dawud)" },
-    { id:"o10", arabic:"اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي", fonetisch:"Allaahumma 'aafinee fee badanee, Allaahumma 'aafinee fee sam'ee, Allaahumma 'aafinee fee basaree...", vertaling:"O Allah, geef mij gezondheid in mijn lichaam, mijn gehoor en mijn zicht. Er is geen god dan U...", aantal:3, categorie:"Dhikr", beloning:null },
-    { id:"o11", arabic:"حَسْبِيَ اللَّهُ لاَ إِلَـهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ", fonetisch:"Hasbiyallaahu laa ilaaha illaa Huwa 'alayhi tawakkaltu wa Huwa Rabbul-'Arshil-'Adheem.", vertaling:"Allah is mij genoeg. Er is geen god dan Hij. Op Hem vertrouw ik en Hij is de Heer van de geweldige Troon.", aantal:7, categorie:"Dhikr", beloning:"Allah zal hem genoeg zijn in wat hem zorgen baart. (Abu Dawud)" },
-    { id:"o12", arabic:"اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ", fonetisch:"Allaahumma innee as'alukal-'afwa wal-'aafiyata fid-dunyaa wal-aakhirati...", vertaling:"O Allah, ik vraag U om vergeving en welzijn in dit leven en het hiernamaals...", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"o13", arabic:"اللَّهُمَّ عَالِمَ الْغَيْبِ وَالشَّهَادَةِ فَاطِرَ السَّمَاوَاتِ وَالأَرْضِ", fonetisch:"Allaahumma 'Aalimal-ghaybi wash-shahaadati faatiras-samaawaati wal-ardhi...", vertaling:"O Allah, Kenner van het onzichtbare en het zichtbare, Schepper van hemelen en aarde...", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"o14", arabic:"بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ", fonetisch:"Bismillaahil-lathee laa yadhurru ma'as-mihi shay'un fil-ardhi wa laa fis-samaa'i...", vertaling:"In de naam van Allah — waarmee niets in de aarde of de hemel schade kan berokkenen...", aantal:3, categorie:"Dhikr", beloning:"Geen plotseling onheil zal hem treffen. (Abu Dawud, Tirmidhi)" },
-    { id:"o15", arabic:"رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا", fonetisch:"Radheetu billaahi Rabban, wa bil-Islaami deenan, wa bi-Muhammadin sallallaahu 'alayhi wa sallama nabiyyan.", vertaling:"Ik ben tevreden met Allah als mijn Heer, met de Islam als mijn godsdienst, en met Mohammed ﷺ als mijn profeet.", aantal:3, categorie:"Dhikr", beloning:"Het is een recht op Allah om hem tevreden te stellen op de Dag des Oordeels. (Abu Dawud)" },
-    { id:"o16", arabic:"يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ", fonetisch:"Yaa Hayyu yaa Qayyoomu birahmatika astagheethu, aslih lee sha'nee kullahu...", vertaling:"O Eeuwig Levende, o Zelfbestaande — door Uw genade zoek ik hulp. Herstel al mijn aangelegenheden...", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"o17", arabic:"أَصْبَحْنَا عَلَى فِطْرَةِ الإِسْلاَمِ", fonetisch:"Asbahnaa 'alaa fitratil-Islaam, wa 'alaa kalimatil-ikhlaas...", vertaling:"Wij zijn de ochtend ingegaan op de fitrah van de Islam, op het woord van oprechtheid...", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"o18", arabic:"سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", fonetisch:"Subhaanallaahi wa bihamdihi.", vertaling:"Glorie zij Allah en alle lof is voor Hem.", aantal:100, categorie:"Tasbeeh", beloning:"Wie dit 100× zegt worden zijn zonden vergeven, al waren ze talrijk als het schuim van de zee. (Bukhari & Muslim)" },
-    { id:"o19", arabic:"لاَ إِلَـهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ", fonetisch:"Laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu wa Huwa 'alaa kulli shay'in Qadeer.", vertaling:"Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof.", aantal:100, categorie:"Tasbeeh", beloning:"100×: gelijk aan het vrijkopen van 10 slaven, 100 goede daden, beschermd van de shaytan die dag. (Bukhari & Muslim)" },
-    { id:"o20", arabic:"سُبْحَانَ اللَّهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ", fonetisch:"Subhaanallaahi wa bihamdihi: 'adada khalqihi, wa ridhaa nafsihi, wa zinata 'arshihi, wa midaada kalimaatih.", vertaling:"Glorie zij Allah — zo talrijk als Zijn schepping, zo veel als Zijn tevredenheid, zo zwaar als Zijn Troon, zo oneindig als Zijn woorden.", aantal:3, categorie:"Tasbeeh", beloning:"Zwaarder op de weegschaal dan de eerste tasbeeh. (Muslim)" },
-    { id:"o21", arabic:"اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا وَرِزْقًا طَيِّبًا وَعَمَلاً مُتَقَبَّلاً", fonetisch:"Allaahumma innee as'aluka 'ilman naafi'an, wa rizqan tayyiban, wa 'amalan mutaqabbalan.", vertaling:"O Allah, ik vraag U nuttige kennis, goede voorziening en aanvaarde daden.", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"o22", arabic:"أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ", fonetisch:"Astaghfirullaaha wa atoobu ilayh.", vertaling:"Ik vraag Allah om vergeving en keer tot Hem terug.", aantal:100, categorie:"Istighfaar", beloning:"De Profeet ﷺ zei dit 100× per dag. (Bukhari & Muslim)" },
-    { id:"o23", arabic:"أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ", fonetisch:"A'oothu bikalimaatil-laahit-taammaati min sharri maa khalaq.", vertaling:"Ik zoek bescherming in de volmaakte woorden van Allah tegen het kwaad van wat Hij heeft geschapen.", aantal:3, categorie:"Dhikr", beloning:"Niets zal hem schaden totdat hij vertrekt. (Muslim)" },
-    { id:"o24", arabic:"اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ", fonetisch:"Allaahumma Salli wa Sallim 'alaa Nabeeyinnaa Muhammad.", vertaling:"O Allah, zend zegeningen en vrede over onze Profeet Mohammed ﷺ.", aantal:10, categorie:"Salawaat", beloning:"Wie 10× salawaat verzendt: 10 zegeningen van Allah, 10 zonden vergeven, 10 rangen verhoogd. (Muslim)" },
+    {
+      id: "o1",
+      arabic: "اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ",
+      fonetisch: "Allahu laa ilaaha illaa Huwal-Hayyul-Qayyoom. Laa ta'khudhuhu sinatun wa laa nawm. Lahu maa fis-samaawaati wa maa fil-ardh. Man dhal-ladhee yashfa'u 'indahu illaa bi-idhnih. Ya'lamu maa bayna aydeehim wa maa khalfahum. Wa laa yuheetoona bishay'im-min 'ilmihi illaa bimaa shaa'. Wasi'a kursiyyuhus-samaawaati wal-ardh. Wa laa ya'ooduhu hifdhuhuma. Wa Huwal-'Aliyyul-'Adheem.",
+      vertaling: "Allah — er is geen god dan Hij, de Eeuwig Levende, de Zelfbestaande. Sluimer noch slaap overvalt Hem. Aan Hem behoort wat in de hemelen en wat op aarde is. Wie is er die bij Hem kan bemiddelen anders dan met Zijn toestemming? Hij weet wat vóór hen en wat achter hen is. En zij omvatten niets van Zijn kennis, behalve wat Hij wil. Zijn Troon strekt zich uit over de hemelen en de aarde. Het bewaken daarvan valt Hem niet zwaar. En Hij is de Verhevene, de Geweldige.",
+      aantal: 1, categorie: "Koran",
+      beloning: "Wie Ayat Al-Kursi reciteert na elke verplichte salah — niets belet hem het Paradijs te betreden behalve de dood. (An-Nasa'i)",
+    },
+    {
+      id: "o2",
+      arabic: "قُلْ هُوَ ٱللَّهُ أَحَدٌ ۝ ٱللَّهُ ٱلصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌ",
+      fonetisch: "Qul huwa Allahu ahad. Allahus-Samad. Lam yalid wa lam yoolad. Wa lam yakun lahu kufuwan ahad.",
+      vertaling: "Zeg: Hij is Allah, de Enige. Allah, de Eeuwige Toevlucht. Hij heeft niet verwekt, noch is Hij verwekt. En niemand is Hem gelijkwaardig.",
+      aantal: 3, categorie: "Koran",
+      beloning: "Al-Ikhlas is gelijkwaardig aan een derde van de Koran. (Bukhari & Muslim)",
+    },
+    {
+      id: "o3",
+      arabic: "قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ ۝ مِن شَرِّ مَا خَلَقَ ۝ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِن شَرِّ ٱلنَّفَّـٰثَـٰتِ فِى ٱلْعُقَدِ ۝ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ",
+      fonetisch: "Qul a'oodhu birabbi al-falaq. Min sharri maa khalaq. Wa min sharri ghaasiqin idha waqab. Wa min sharrin-naffaathaati fil-'uqad. Wa min sharri haasidin idha hasad.",
+      vertaling: "Zeg: Ik zoek bescherming bij de Heer van de dageraad. Tegen het kwaad van wat Hij heeft geschapen. Tegen het kwaad van de duisternis als zij valt. Tegen het kwaad van hen die op knopen blazen. Tegen het kwaad van een afgunstige als hij afgunst koestert.",
+      aantal: 3, categorie: "Koran", beloning: null,
+    },
+    {
+      id: "o4",
+      arabic: "قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ ۝ مَلِكِ ٱلنَّاسِ ۝ إِلَـٰهِ ٱلنَّاسِ ۝ مِن شَرِّ ٱلْوَسْوَاسِ ٱلْخَنَّاسِ ۝ ٱلَّذِى يُوَسْوِسُ فِى صُدُورِ ٱلنَّاسِ ۝ مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ",
+      fonetisch: "Qul a'oodhu birabbi an-naas. Maliki an-naas. Ilaahi an-naas. Min sharril-waswaasil-khannaas. Alladhee yuwaswisu fee sudoorin-naas. Minal-jinnati wan-naas.",
+      vertaling: "Zeg: Ik zoek bescherming bij de Heer van de mensen. De Koning van de mensen. De God van de mensen. Tegen het kwaad van de influisteraar die zich terugtrekt. Die influistert in de harten van de mensen. Uit de djinn en de mensen.",
+      aantal: 3, categorie: "Koran", beloning: null,
+    },
+    {
+      id: "o5",
+      arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ، لاَ إِلَـهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيكَ لَهُ",
+      fonetisch: "Asbahnaa wa asbahal-mulku lillaahi walhamdu lillaahi, laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu wa Huwa 'alaa kulli shay'in Qadeer.",
+      vertaling: "Wij zijn de ochtend ingegaan en het koninkrijk behoort Allah toe. Alle lof is voor Allah. Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof, en Hij is over alles Almachtig.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "o6",
+      arabic: "اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ",
+      fonetisch: "Allaahumma bika asbahnaa, wa bika amsaynaa, wa bika nahyaa, wa bika namootu wa ilaykan-nushoor.",
+      vertaling: "O Allah, door U zijn wij de ochtend ingegaan, door U de avond, door U leven wij en door U sterven wij — en tot U is de wederopstanding.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "o7",
+      arabic: "اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَـهَ إِلاَّ أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ",
+      fonetisch: "Allaahumma Anta Rabbee laa ilaaha illaa Anta, khalaqtanee wa anaa 'abduka, wa anaa 'alaa 'ahdika wa wa'dika mastataTtu, a'oothu bika min sharri maa sana'tu, aboo'u laka bini'matika 'alayya, wa aboo'u bithanbee faghfir lee fa'innahu laa yaghfirudhdhunuba illaa Anta.",
+      vertaling: "O Allah, U bent mijn Heer. Er is geen god dan U. U hebt mij geschapen en ik ben Uw dienaar. Ik houd mij aan mijn verbond en belofte aan U zo goed ik kan. Ik zoek bescherming bij U tegen het kwaad van wat ik heb gedaan. Ik erken Uw gunsten aan mij en ik erken mijn zonde — vergeef mij, want niemand vergeeft zonden behalve U.",
+      aantal: 1, categorie: "Dhikr",
+      beloning: "Wie dit 's ochtends zegt met overtuiging en vóór de avond sterft, behoort tot de mensen van het Paradijs. Evenzo 's avonds. (Bukhari) — Dit is Sayyid Al-Istighfaar.",
+    },
+    {
+      id: "o8",
+      arabic: "اللَّهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلاَئِكَتَكَ وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللَّهُ لاَ إِلَـهَ إِلاَّ أَنْتَ وَحْدَكَ لاَ شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ",
+      fonetisch: "Allaahumma innee asbaHtu ush-hiduka wa ush-hidu Hamalata 'arshika, wa malaa'ikataka wa jamee'a khalqika, annaka Antal-laahu laa ilaaha illaa Anta wahdaka laa shareeka laka, wa anna Muhammadan 'abduka wa Rasooluka.",
+      vertaling: "O Allah, ik roep U als getuige aan, en de dragers van Uw Troon, en Uw engelen en al Uw schepping: dat U Allah bent, er is geen god dan U alleen, zonder deelgenoot — en dat Mohammed Uw dienaar en Boodschapper is.",
+      aantal: 4, categorie: "Dhikr",
+      beloning: "Allah bevrijdt daarmee een kwart van de persoon van het Hellevuur. Wie het 4× zegt wordt volledig bevrijd. (Abu Dawud)",
+    },
+    {
+      id: "o9",
+      arabic: "اللَّهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لاَ شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ",
+      fonetisch: "Allaahumma maa asbaHa bee min ni'matin aw bi-ahadin min khalqika faminka wahdaka laa shareeka laka, falakal-hamdu wa lakashshukru.",
+      vertaling: "O Allah, welke gunst ik ook ontvang deze ochtend, of enig deel van Uw schepping — die is uitsluitend van U, zonder deelgenoot. Alle lof is voor U en alle dank.",
+      aantal: 1, categorie: "Dhikr",
+      beloning: "Wie dit 's ochtends zegt heeft de dankbaarheidsplicht van die dag vervuld. (Abu Dawud)",
+    },
+    {
+      id: "o10",
+      arabic: "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لاَ إِلَـهَ إِلاَّ أَنْتَ",
+      fonetisch: "Allaahumma 'aafinee fee badanee, Allaahumma 'aafinee fee sam'ee, Allaahumma 'aafinee fee basaree, laa ilaaha illaa Anta. Allaahumma innee a'oothu bika minal-kufri, walfaqri, wa a'oothu bika min 'adhaabil-qabri, laa ilaaha illaa Anta.",
+      vertaling: "O Allah, geef mij gezondheid in mijn lichaam. O Allah, geef mij gezondheid in mijn gehoor. O Allah, geef mij gezondheid in mijn zicht. Er is geen god dan U. O Allah, ik zoek bescherming bij U tegen ongeloof en armoede, en tegen de bestraffing van het graf. Er is geen god dan U.",
+      aantal: 3, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "o11",
+      arabic: "حَسْبِيَ اللَّهُ لاَ إِلَـهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ",
+      fonetisch: "Hasbiyallaahu laa ilaaha illaa Huwa 'alayhi tawakkaltu wa Huwa Rabbul-'Arshil-'Adheem.",
+      vertaling: "Allah is mij genoeg. Er is geen god dan Hij. Op Hem vertrouw ik en Hij is de Heer van de geweldige Troon.",
+      aantal: 7, categorie: "Dhikr",
+      beloning: "Allah zal hem genoeg zijn in wat hem zorgen baart. (Abu Dawud, Ibn As-Sunni)",
+    },
+    {
+      id: "o12",
+      arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ",
+      fonetisch: "Allaahumma innee as'alukal-'afwa wal-'aafiyata fid-dunyaa wal-aakhirati. Allaahum-mastur 'awraatee, wa amin raw'aatee. Allaahum-mahfadhnee min bayni yadayya, wa min khalfee, wa 'an yameenee, wa 'an shimaalee, wa min fawqee, wa a'oothu bi'adhamatika an ughtaala min tahtee.",
+      vertaling: "O Allah, ik vraag U om vergeving en welzijn in dit leven en het hiernamaals. O Allah, bedek mijn gebreken en stel mijn angsten gerust. O Allah, bescherm mij van vóór mij en achter mij, van rechts, van links en van boven — en ik zoek bescherming in Uw Grootheid dat ik van onderen vernietigd word.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "o13",
+      arabic: "اللَّهُمَّ عَالِمَ الْغَيْبِ وَالشَّهَادَةِ فَاطِرَ السَّمَاوَاتِ وَالأَرْضِ",
+      fonetisch: "Allaahumma 'Aalimal-ghaybi wash-shahaadati faatiras-samaawaati wal-ardhi, Rabba kulli shay'in wa maleekahu, ash-hadu an laa ilaaha illaa Anta, a'oothu bika min sharri nafsee, wa min sharrish-shaytaani wa shirkihi, wa an aqtarifa 'alaa nafsee soo'an aw ajurrahu ilaa muslim.",
+      vertaling: "O Allah, Kenner van het onzichtbare en het zichtbare, Schepper van hemelen en aarde, Heer en Bezitter van alles — ik getuig dat er geen god is dan U. Ik zoek bescherming bij U tegen het kwaad van mijn ziel, en het kwaad van de shaytan en zijn polytheïsme, en dat ik iets slechts tegen mijzelf of een moslim bewerk.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "o14",
+      arabic: "بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",
+      fonetisch: "Bismillaahil-lathee laa yadhurru ma'as-mihi shay'un fil-ardhi wa laa fis-samaa'i wa Huwas-Samee'ul-'Aleem.",
+      vertaling: "In de naam van Allah — waarmee niets in de aarde of de hemel schade kan berokkenen. Hij is de Alhorende, de Alwetende.",
+      aantal: 3, categorie: "Dhikr",
+      beloning: "Geen plotseling onheil zal hem treffen. (Abu Dawud, Tirmidhi)",
+    },
+    {
+      id: "o15",
+      arabic: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا",
+      fonetisch: "Radheetu billaahi Rabban, wa bil-Islaami deenan, wa bi-Muhammadin sallallaahu 'alayhi wa sallama nabiyyan.",
+      vertaling: "Ik ben tevreden met Allah als mijn Heer, met de Islam als mijn godsdienst, en met Mohammed ﷺ als mijn profeet.",
+      aantal: 3, categorie: "Dhikr",
+      beloning: "Het is een recht op Allah om hem tevreden te stellen op de Dag des Oordeels. (Abu Dawud, Tirmidhi)",
+    },
+    {
+      id: "o16",
+      arabic: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",
+      fonetisch: "Yaa Hayyu yaa Qayyoomu birahmatika astagheethu, aslih lee sha'nee kullahu wa laa takilnee ilaa nafsee tarfata 'aynin.",
+      vertaling: "O Eeuwig Levende, o Zelfbestaande — door Uw genade zoek ik hulp. Herstel al mijn aangelegenheden en laat mij geen ogenblik aan mijzelf over.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "o17",
+      arabic: "أَصْبَحْنَا عَلَى فِطْرَةِ الإِسْلاَمِ، وَعَلَى كَلِمَةِ الإِخْلاَصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ",
+      fonetisch: "Asbahnaa 'alaa fitratil-Islaam, wa 'alaa kalimatil-ikhlaas, wa 'alaa deeni nabiyyinaa Muhammadin sallallaahu 'alayhi wa sallama, wa 'alaa millati abeenaa Ibraaheema haneefan musliman wa maa kaana minal-mushrikeen.",
+      vertaling: "Wij zijn de ochtend ingegaan op de fitrah van de Islam, op het woord van oprechtheid, op de godsdienst van onze Profeet Mohammed ﷺ, en op de godsdienst van onze vader Ibrahim — zuiver rechtleidig moslim, en hij behoorde niet tot de veelgodenaanbidders.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "o18",
+      arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
+      fonetisch: "Subhaanallaahi wa bihamdihi.",
+      vertaling: "Glorie zij Allah en alle lof is voor Hem.",
+      aantal: 100, categorie: "Tasbeeh",
+      beloning: "Wie dit 100× zegt worden zijn zonden vergeven, al waren ze talrijk als het schuim van de zee. (Bukhari & Muslim)",
+    },
+    {
+      id: "o19",
+      arabic: "لاَ إِلَـهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+      fonetisch: "Laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu wa Huwa 'alaa kulli shay'in Qadeer.",
+      vertaling: "Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof, en Hij is over alles Almachtig.",
+      aantal: 100, categorie: "Tasbeeh",
+      beloning: "100×: gelijk aan het vrijkopen van 10 slaven, 100 goede daden geschreven, 100 zonden uitgewist, beschermd tegen de shaytan die dag, en niemand doet beter behalve wie meer zegt. (Bukhari & Muslim)",
+    },
+    {
+      id: "o20",
+      arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ، وَرِضَا نَفْسِهِ، وَزِنَةَ عَرْشِهِ، وَمِدَادَ كَلِمَاتِهِ",
+      fonetisch: "Subhaanallaahi wa bihamdihi: 'adada khalqihi, wa ridhaa nafsihi, wa zinata 'arshihi, wa midaada kalimaatih.",
+      vertaling: "Glorie zij Allah en alle lof is voor Hem — zo talrijk als Zijn schepping, zo veel als Zijn tevredenheid, zo zwaar als Zijn Troon, en zo oneindig als Zijn woorden.",
+      aantal: 3, categorie: "Tasbeeh",
+      beloning: "Zwaarder op de weegschaal dan de eerste tasbeeh. (Muslim)",
+    },
+    {
+      id: "o21",
+      arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلاً مُتَقَبَّلاً",
+      fonetisch: "Allaahumma innee as'aluka 'ilman naafi'an, wa rizqan tayyiban, wa 'amalan mutaqabbalan.",
+      vertaling: "O Allah, ik vraag U nuttige kennis, goede voorziening en aanvaarde daden.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "o22",
+      arabic: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ",
+      fonetisch: "Astaghfirullaaha wa atoobu ilayh.",
+      vertaling: "Ik vraag Allah om vergeving en keer tot Hem terug.",
+      aantal: 100, categorie: "Istighfaar",
+      beloning: "De Profeet ﷺ zei dit 100× per dag. (Bukhari & Muslim)",
+    },
+    {
+      id: "o23",
+      arabic: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+      fonetisch: "A'oothu bikalimaatil-laahit-taammaati min sharri maa khalaq.",
+      vertaling: "Ik zoek bescherming in de volmaakte woorden van Allah tegen het kwaad van wat Hij heeft geschapen.",
+      aantal: 3, categorie: "Dhikr",
+      beloning: "Niets zal hem schaden totdat hij vertrekt. (Muslim)",
+    },
+    {
+      id: "o24",
+      arabic: "اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ",
+      fonetisch: "Allaahumma Salli wa Sallim 'alaa Nabeeyinnaa Muhammad.",
+      vertaling: "O Allah, zend zegeningen en vrede over onze Profeet Mohammed ﷺ.",
+      aantal: 10, categorie: "Salawaat",
+      beloning: "Wie 10× salawaat verzendt: 10 zegeningen van Allah, 10 zonden vergeven, 10 rangen verhoogd. (Muslim)",
+    },
   ],
   avond: [
-    { id:"a1", arabic:"اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ", fonetisch:"Allahu laa ilaaha illaa Huwal-Hayyul-Qayyoom...", vertaling:"Allah — er is geen god dan Hij, de Eeuwig Levende, de Zelfbestaande...", aantal:1, categorie:"Koran", beloning:"Wie Ayat Al-Kursi reciteert na elke verplichte salah — niets belet hem het Paradijs te betreden behalve de dood." },
-    { id:"a2", arabic:"قُلْ هُوَ ٱللَّهُ أَحَدٌ ۝ ٱللَّهُ ٱلصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌ", fonetisch:"Qul huwa Allahu ahad. Allahus-Samad. Lam yalid wa lam yoolad. Wa lam yakun lahu kufuwan ahad.", vertaling:"Zeg: Hij is Allah, de Enige. Allah, de Eeuwige Toevlucht. Hij heeft niet verwekt, noch is Hij verwekt.", aantal:3, categorie:"Koran", beloning:"Al-Ikhlas is gelijkwaardig aan een derde van de Koran. (Bukhari & Muslim)" },
-    { id:"a3", arabic:"قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ ۝ مِن شَرِّ مَا خَلَقَ", fonetisch:"Qul a'oodhu birabbi al-falaq...", vertaling:"Zeg: Ik zoek bescherming bij de Heer van de dageraad...", aantal:3, categorie:"Koran", beloning:null },
-    { id:"a4", arabic:"قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ ۝ مَلِكِ ٱلنَّاسِ ۝ إِلَـٰهِ ٱلنَّاسِ", fonetisch:"Qul a'oodhu birabbi an-naas...", vertaling:"Zeg: Ik zoek bescherming bij de Heer van de mensen...", aantal:3, categorie:"Koran", beloning:null },
-    { id:"a5", arabic:"أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ", fonetisch:"Amsaynaa wa amsal-mulku lillaahi walhamdu lillaahi...", vertaling:"Wij zijn de avond ingegaan en het koninkrijk behoort Allah toe. Alle lof is voor Allah.", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"a6", arabic:"اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ الْمَصِيرُ", fonetisch:"Allaahumma bika amsaynaa, wa bika asbahnaa, wa bika nahyaa, wa bika namootu wa ilaykal-maseer.", vertaling:"O Allah, door U zijn wij de avond ingegaan, door U de ochtend, door U leven wij en door U sterven wij.", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"a7", arabic:"اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَـهَ إِلاَّ أَنْتَ", fonetisch:"Allaahumma Anta Rabbee laa ilaaha illaa Anta...", vertaling:"O Allah, U bent mijn Heer. Er is geen god dan U. U hebt mij geschapen en ik ben Uw dienaar...", aantal:1, categorie:"Dhikr", beloning:"Sayyid Al-Istighfaar — Wie dit 's avonds zegt met overtuiging en vóór de ochtend sterft, behoort tot de mensen van het Paradijs. (Bukhari)" },
-    { id:"a8", arabic:"اللَّهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ", fonetisch:"Allaahumma innee amsaytu ush-hiduka wa ush-hidu Hamalata 'arshika...", vertaling:"O Allah, ik roep U als getuige aan deze avond, en de dragers van Uw Troon, Uw engelen en al Uw schepping...", aantal:4, categorie:"Dhikr", beloning:"Allah bevrijdt daarmee een kwart van de persoon van het Hellevuur per keer. 4× = volledig bevrijd. (Abu Dawud)" },
-    { id:"a9", arabic:"اللَّهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ", fonetisch:"Allaahumma maa amsaa bee min ni'matin aw bi-ahadin min khalqika faminka...", vertaling:"O Allah, welke gunst ik ook ontvang deze avond — die is uitsluitend van U. Alle lof is voor U.", aantal:1, categorie:"Dhikr", beloning:"Wie dit 's avonds zegt heeft de dankbaarheidsplicht van die nacht vervuld. (Abu Dawud)" },
-    { id:"a10", arabic:"اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي", fonetisch:"Allaahumma 'aafinee fee badanee, Allaahumma 'aafinee fee sam'ee...", vertaling:"O Allah, geef mij gezondheid in mijn lichaam, gehoor en zicht. Er is geen god dan U...", aantal:3, categorie:"Dhikr", beloning:null },
-    { id:"a11", arabic:"حَسْبِيَ اللَّهُ لاَ إِلَـهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ", fonetisch:"Hasbiyallaahu laa ilaaha illaa Huwa 'alayhi tawakkaltu wa Huwa Rabbul-'Arshil-'Adheem.", vertaling:"Allah is mij genoeg. Er is geen god dan Hij. Op Hem vertrouw ik.", aantal:7, categorie:"Dhikr", beloning:"Allah zal hem genoeg zijn in wat hem zorgen baart. (Abu Dawud)" },
-    { id:"a12", arabic:"اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ", fonetisch:"Allaahumma innee as'alukal-'afwa wal-'aafiyata fid-dunyaa wal-aakhirati...", vertaling:"O Allah, ik vraag U om vergeving en welzijn in dit leven en het hiernamaals...", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"a13", arabic:"اللَّهُمَّ عَالِمَ الْغَيْبِ وَالشَّهَادَةِ", fonetisch:"Allaahumma 'Aalimal-ghaybi wash-shahaadati faatiras-samaawaati wal-ardhi...", vertaling:"O Allah, Kenner van het onzichtbare en het zichtbare, Schepper van hemelen en aarde...", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"a14", arabic:"بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ", fonetisch:"Bismillaahil-lathee laa yadhurru ma'as-mihi shay'un fil-ardhi wa laa fis-samaa'i...", vertaling:"In de naam van Allah — waarmee niets in de aarde of de hemel schade kan berokkenen.", aantal:3, categorie:"Dhikr", beloning:"Geen plotseling onheil zal hem treffen. (Abu Dawud, Tirmidhi)" },
-    { id:"a15", arabic:"رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا", fonetisch:"Radheetu billaahi Rabban, wa bil-Islaami deenan, wa bi-Muhammadin sallallaahu 'alayhi wa sallama nabiyyan.", vertaling:"Ik ben tevreden met Allah als mijn Heer, met de Islam als mijn godsdienst, en met Mohammed ﷺ als mijn profeet.", aantal:3, categorie:"Dhikr", beloning:"Het is een recht op Allah om hem tevreden te stellen op de Dag des Oordeels. (Abu Dawud)" },
-    { id:"a16", arabic:"يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ", fonetisch:"Yaa Hayyu yaa Qayyoomu birahmatika astagheethu...", vertaling:"O Eeuwig Levende, o Zelfbestaande — door Uw genade zoek ik hulp...", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"a17", arabic:"أَمْسَيْنَا عَلَى فِطْرَةِ الإِسْلاَمِ", fonetisch:"Amsaynaa 'alaa fitratil-Islaam, wa 'alaa kalimatil-ikhlaas...", vertaling:"Wij zijn de avond ingegaan op de fitrah van de Islam, op het woord van oprechtheid...", aantal:1, categorie:"Dhikr", beloning:null },
-    { id:"a18", arabic:"سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", fonetisch:"Subhaanallaahi wa bihamdihi.", vertaling:"Glorie zij Allah en alle lof is voor Hem.", aantal:100, categorie:"Tasbeeh", beloning:"Wie dit 100× zegt worden zijn zonden vergeven, al waren ze talrijk als het schuim van de zee. (Bukhari & Muslim)" },
-    { id:"a19", arabic:"لاَ إِلَـهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ", fonetisch:"Laa ilaaha illallaahu wahdahu laa shareeka lahu...", vertaling:"Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof.", aantal:10, categorie:"Tasbeeh", beloning:"10×: gelijk aan het vrijkopen van een slaaf, 10 goede daden, beschermd van de shaytan. (Tirmidhi)" },
-    { id:"a20", arabic:"سُبْحَانَ اللَّهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ", fonetisch:"Subhaanallaahi wa bihamdihi: 'adada khalqihi...", vertaling:"Glorie zij Allah — zo talrijk als Zijn schepping, zo zwaar als Zijn Troon, zo oneindig als Zijn woorden.", aantal:3, categorie:"Tasbeeh", beloning:"Zwaarder op de weegschaal dan de gewone tasbeeh. (Muslim)" },
-    { id:"a21", arabic:"أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ", fonetisch:"Astaghfirullaaha wa atoobu ilayh.", vertaling:"Ik vraag Allah om vergeving en keer tot Hem terug.", aantal:100, categorie:"Istighfaar", beloning:"De Profeet ﷺ zei dit 100× per dag. (Bukhari & Muslim)" },
-    { id:"a22", arabic:"أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ", fonetisch:"A'oothu bikalimaatil-laahit-taammaati min sharri maa khalaq.", vertaling:"Ik zoek bescherming in de volmaakte woorden van Allah.", aantal:3, categorie:"Dhikr", beloning:"Niets zal hem schaden totdat hij vertrekt. (Muslim)" },
-    { id:"a23", arabic:"اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ", fonetisch:"Allaahumma Salli wa Sallim 'alaa Nabeeyinnaa Muhammad.", vertaling:"O Allah, zend zegeningen en vrede over onze Profeet Mohammed ﷺ.", aantal:10, categorie:"Salawaat", beloning:"Wie 10× salawaat verzendt: 10 zegeningen van Allah, 10 zonden vergeven, 10 rangen verhoogd. (Muslim)" },
+    {
+      id: "a1",
+      arabic: "اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ",
+      fonetisch: "Allahu laa ilaaha illaa Huwal-Hayyul-Qayyoom. Laa ta'khudhuhu sinatun wa laa nawm. Lahu maa fis-samaawaati wa maa fil-ardh. Man dhal-ladhee yashfa'u 'indahu illaa bi-idhnih. Ya'lamu maa bayna aydeehim wa maa khalfahum. Wa laa yuheetoona bishay'im-min 'ilmihi illaa bimaa shaa'. Wasi'a kursiyyuhus-samaawaati wal-ardh. Wa laa ya'ooduhu hifdhuhuma. Wa Huwal-'Aliyyul-'Adheem.",
+      vertaling: "Allah — er is geen god dan Hij, de Eeuwig Levende, de Zelfbestaande. Sluimer noch slaap overvalt Hem. Aan Hem behoort wat in de hemelen en wat op aarde is. Wie is er die bij Hem kan bemiddelen anders dan met Zijn toestemming? Hij weet wat vóór hen en wat achter hen is. En zij omvatten niets van Zijn kennis, behalve wat Hij wil. Zijn Troon strekt zich uit over de hemelen en de aarde. Het bewaken daarvan valt Hem niet zwaar. En Hij is de Verhevene, de Geweldige.",
+      aantal: 1, categorie: "Koran",
+      beloning: "Wie Ayat Al-Kursi reciteert na elke verplichte salah — niets belet hem het Paradijs te betreden behalve de dood. (An-Nasa'i)",
+    },
+    {
+      id: "a2",
+      arabic: "قُلْ هُوَ ٱللَّهُ أَحَدٌ ۝ ٱللَّهُ ٱلصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌ",
+      fonetisch: "Qul huwa Allahu ahad. Allahus-Samad. Lam yalid wa lam yoolad. Wa lam yakun lahu kufuwan ahad.",
+      vertaling: "Zeg: Hij is Allah, de Enige. Allah, de Eeuwige Toevlucht. Hij heeft niet verwekt, noch is Hij verwekt. En niemand is Hem gelijkwaardig.",
+      aantal: 3, categorie: "Koran",
+      beloning: "Al-Ikhlas is gelijkwaardig aan een derde van de Koran. (Bukhari & Muslim)",
+    },
+    {
+      id: "a3",
+      arabic: "قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ ۝ مِن شَرِّ مَا خَلَقَ ۝ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِن شَرِّ ٱلنَّفَّـٰثَـٰتِ فِى ٱلْعُقَدِ ۝ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ",
+      fonetisch: "Qul a'oodhu birabbi al-falaq. Min sharri maa khalaq. Wa min sharri ghaasiqin idha waqab. Wa min sharrin-naffaathaati fil-'uqad. Wa min sharri haasidin idha hasad.",
+      vertaling: "Zeg: Ik zoek bescherming bij de Heer van de dageraad. Tegen het kwaad van wat Hij heeft geschapen. Tegen het kwaad van de duisternis als zij valt. Tegen het kwaad van hen die op knopen blazen. Tegen het kwaad van een afgunstige als hij afgunst koestert.",
+      aantal: 3, categorie: "Koran", beloning: null,
+    },
+    {
+      id: "a4",
+      arabic: "قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ ۝ مَلِكِ ٱلنَّاسِ ۝ إِلَـٰهِ ٱلنَّاسِ ۝ مِن شَرِّ ٱلْوَسْوَاسِ ٱلْخَنَّاسِ ۝ ٱلَّذِى يُوَسْوِسُ فِى صُدُورِ ٱلنَّاسِ ۝ مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ",
+      fonetisch: "Qul a'oodhu birabbi an-naas. Maliki an-naas. Ilaahi an-naas. Min sharril-waswaasil-khannaas. Alladhee yuwaswisu fee sudoorin-naas. Minal-jinnati wan-naas.",
+      vertaling: "Zeg: Ik zoek bescherming bij de Heer van de mensen. De Koning van de mensen. De God van de mensen. Tegen het kwaad van de influisteraar die zich terugtrekt. Die influistert in de harten van de mensen. Uit de djinn en de mensen.",
+      aantal: 3, categorie: "Koran", beloning: null,
+    },
+    {
+      id: "a5",
+      arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ، لاَ إِلَـهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ",
+      fonetisch: "Amsaynaa wa amsal-mulku lillaahi walhamdu lillaahi, laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu wa Huwa 'alaa kulli shay'in Qadeer.",
+      vertaling: "Wij zijn de avond ingegaan en het koninkrijk behoort Allah toe. Alle lof is voor Allah. Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof, en Hij is over alles Almachtig.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "a6",
+      arabic: "اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ الْمَصِيرُ",
+      fonetisch: "Allaahumma bika amsaynaa, wa bika asbahnaa, wa bika nahyaa, wa bika namootu wa ilaykal-maseer.",
+      vertaling: "O Allah, door U zijn wij de avond ingegaan, door U de ochtend, door U leven wij en door U sterven wij — en tot U is de terugkeer.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "a7",
+      arabic: "اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَـهَ إِلاَّ أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ",
+      fonetisch: "Allaahumma Anta Rabbee laa ilaaha illaa Anta, khalaqtanee wa anaa 'abduka, wa anaa 'alaa 'ahdika wa wa'dika mastataTtu, a'oothu bika min sharri maa sana'tu, aboo'u laka bini'matika 'alayya, wa aboo'u bithanbee faghfir lee fa'innahu laa yaghfirudhdhunuba illaa Anta.",
+      vertaling: "O Allah, U bent mijn Heer. Er is geen god dan U. U hebt mij geschapen en ik ben Uw dienaar. Ik houd mij aan mijn verbond en belofte aan U zo goed ik kan. Ik zoek bescherming bij U tegen het kwaad van wat ik heb gedaan. Ik erken Uw gunsten aan mij en ik erken mijn zonde — vergeef mij, want niemand vergeeft zonden behalve U.",
+      aantal: 1, categorie: "Dhikr",
+      beloning: "Wie dit 's avonds zegt met overtuiging en vóór de ochtend sterft, behoort tot de mensen van het Paradijs. (Bukhari) — Sayyid Al-Istighfaar.",
+    },
+    {
+      id: "a8",
+      arabic: "اللَّهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلاَئِكَتَكَ وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللَّهُ لاَ إِلَـهَ إِلاَّ أَنْتَ وَحْدَكَ لاَ شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ",
+      fonetisch: "Allaahumma innee amsaytu ush-hiduka wa ush-hidu Hamalata 'arshika, wa malaa'ikataka wa jamee'a khalqika, annaka Antal-laahu laa ilaaha illaa Anta wahdaka laa shareeka laka, wa anna Muhammadan 'abduka wa Rasooluka.",
+      vertaling: "O Allah, ik roep U als getuige aan deze avond, en de dragers van Uw Troon, Uw engelen en al Uw schepping: dat U Allah bent, er is geen god dan U alleen, zonder deelgenoot — en dat Mohammed Uw dienaar en Boodschapper is.",
+      aantal: 4, categorie: "Dhikr",
+      beloning: "Allah bevrijdt daarmee een kwart van de persoon van het Hellevuur per keer. 4× = volledig bevrijd. (Abu Dawud)",
+    },
+    {
+      id: "a9",
+      arabic: "اللَّهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لاَ شَرِيكَ لَكَ",
+      fonetisch: "Allaahumma maa amsaa bee min ni'matin aw bi-ahadin min khalqika faminka wahdaka laa shareeka laka, falakal-hamdu wa lakashshukru.",
+      vertaling: "O Allah, welke gunst ik ook ontvang deze avond, of enig deel van Uw schepping — die is uitsluitend van U, zonder deelgenoot. Alle lof is voor U en alle dank.",
+      aantal: 1, categorie: "Dhikr",
+      beloning: "Wie dit 's avonds zegt heeft de dankbaarheidsplicht van die nacht vervuld. (Abu Dawud)",
+    },
+    {
+      id: "a10",
+      arabic: "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لاَ إِلَـهَ إِلاَّ أَنْتَ",
+      fonetisch: "Allaahumma 'aafinee fee badanee, Allaahumma 'aafinee fee sam'ee, Allaahumma 'aafinee fee basaree, laa ilaaha illaa Anta. Allaahumma innee a'oothu bika minal-kufri, walfaqri, wa a'oothu bika min 'adhaabil-qabri, laa ilaaha illaa Anta.",
+      vertaling: "O Allah, geef mij gezondheid in mijn lichaam. O Allah, geef mij gezondheid in mijn gehoor. O Allah, geef mij gezondheid in mijn zicht. Er is geen god dan U. O Allah, ik zoek bescherming bij U tegen ongeloof en armoede, en tegen de bestraffing van het graf. Er is geen god dan U.",
+      aantal: 3, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "a11",
+      arabic: "حَسْبِيَ اللَّهُ لاَ إِلَـهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ",
+      fonetisch: "Hasbiyallaahu laa ilaaha illaa Huwa 'alayhi tawakkaltu wa Huwa Rabbul-'Arshil-'Adheem.",
+      vertaling: "Allah is mij genoeg. Er is geen god dan Hij. Op Hem vertrouw ik en Hij is de Heer van de geweldige Troon.",
+      aantal: 7, categorie: "Dhikr",
+      beloning: "Allah zal hem genoeg zijn in wat hem zorgen baart. (Abu Dawud)",
+    },
+    {
+      id: "a12",
+      arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ",
+      fonetisch: "Allaahumma innee as'alukal-'afwa wal-'aafiyata fid-dunyaa wal-aakhirati. Allaahum-mastur 'awraatee, wa amin raw'aatee. Allaahum-mahfadhnee min bayni yadayya, wa min khalfee, wa 'an yameenee, wa 'an shimaalee, wa min fawqee, wa a'oothu bi'adhamatika an ughtaala min tahtee.",
+      vertaling: "O Allah, ik vraag U om vergeving en welzijn in dit leven en het hiernamaals. O Allah, bedek mijn gebreken en stel mijn angsten gerust. O Allah, bescherm mij van vóór mij en achter mij, van rechts, van links en van boven — en ik zoek bescherming in Uw Grootheid dat ik van onderen vernietigd word.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "a13",
+      arabic: "اللَّهُمَّ عَالِمَ الْغَيْبِ وَالشَّهَادَةِ فَاطِرَ السَّمَاوَاتِ وَالأَرْضِ",
+      fonetisch: "Allaahumma 'Aalimal-ghaybi wash-shahaadati faatiras-samaawaati wal-ardhi, Rabba kulli shay'in wa maleekahu, ash-hadu an laa ilaaha illaa Anta, a'oothu bika min sharri nafsee, wa min sharrish-shaytaani wa shirkihi, wa an aqtarifa 'alaa nafsee soo'an aw ajurrahu ilaa muslim.",
+      vertaling: "O Allah, Kenner van het onzichtbare en het zichtbare, Schepper van hemelen en aarde, Heer en Bezitter van alles — ik getuig dat er geen god is dan U. Ik zoek bescherming bij U tegen het kwaad van mijn ziel en de shaytan en zijn polytheïsme, en dat ik iets slechts tegen mijzelf of een moslim bewerk.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "a14",
+      arabic: "بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",
+      fonetisch: "Bismillaahil-lathee laa yadhurru ma'as-mihi shay'un fil-ardhi wa laa fis-samaa'i wa Huwas-Samee'ul-'Aleem.",
+      vertaling: "In de naam van Allah — waarmee niets in de aarde of de hemel schade kan berokkenen. Hij is de Alhorende, de Alwetende.",
+      aantal: 3, categorie: "Dhikr",
+      beloning: "Geen plotseling onheil zal hem treffen. (Abu Dawud, Tirmidhi)",
+    },
+    {
+      id: "a15",
+      arabic: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا",
+      fonetisch: "Radheetu billaahi Rabban, wa bil-Islaami deenan, wa bi-Muhammadin sallallaahu 'alayhi wa sallama nabiyyan.",
+      vertaling: "Ik ben tevreden met Allah als mijn Heer, met de Islam als mijn godsdienst, en met Mohammed ﷺ als mijn profeet.",
+      aantal: 3, categorie: "Dhikr",
+      beloning: "Het is een recht op Allah om hem tevreden te stellen op de Dag des Oordeels. (Abu Dawud, Tirmidhi)",
+    },
+    {
+      id: "a16",
+      arabic: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",
+      fonetisch: "Yaa Hayyu yaa Qayyoomu birahmatika astagheethu, aslih lee sha'nee kullahu wa laa takilnee ilaa nafsee tarfata 'aynin.",
+      vertaling: "O Eeuwig Levende, o Zelfbestaande — door Uw genade zoek ik hulp. Herstel al mijn aangelegenheden en laat mij geen ogenblik aan mijzelf over.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "a17",
+      arabic: "أَمْسَيْنَا عَلَى فِطْرَةِ الإِسْلاَمِ، وَعَلَى كَلِمَةِ الإِخْلاَصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ",
+      fonetisch: "Amsaynaa 'alaa fitratil-Islaam, wa 'alaa kalimatil-ikhlaas, wa 'alaa deeni nabiyyinaa Muhammadin sallallaahu 'alayhi wa sallama, wa 'alaa millati abeenaa Ibraaheema haneefan musliman wa maa kaana minal-mushrikeen.",
+      vertaling: "Wij zijn de avond ingegaan op de fitrah van de Islam, op het woord van oprechtheid, op de godsdienst van onze Profeet Mohammed ﷺ, en op de godsdienst van onze vader Ibrahim — zuiver rechtleidig moslim, en hij behoorde niet tot de veelgodenaanbidders.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "a18",
+      arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
+      fonetisch: "Subhaanallaahi wa bihamdihi.",
+      vertaling: "Glorie zij Allah en alle lof is voor Hem.",
+      aantal: 100, categorie: "Tasbeeh",
+      beloning: "Wie dit 100× zegt worden zijn zonden vergeven, al waren ze talrijk als het schuim van de zee. (Bukhari & Muslim)",
+    },
+    {
+      id: "a19",
+      arabic: "لاَ إِلَـهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+      fonetisch: "Laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu wa Huwa 'alaa kulli shay'in Qadeer.",
+      vertaling: "Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof, en Hij is over alles Almachtig.",
+      aantal: 10, categorie: "Tasbeeh",
+      beloning: "10×: gelijk aan het vrijkopen van een slaaf, 10 goede daden, 10 zonden uitgewist, beschermd van de shaytan. (Tirmidhi)",
+    },
+    {
+      id: "a20",
+      arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ، وَرِضَا نَفْسِهِ، وَزِنَةَ عَرْشِهِ، وَمِدَادَ كَلِمَاتِهِ",
+      fonetisch: "Subhaanallaahi wa bihamdihi: 'adada khalqihi, wa ridhaa nafsihi, wa zinata 'arshihi, wa midaada kalimaatih.",
+      vertaling: "Glorie zij Allah en alle lof is voor Hem — zo talrijk als Zijn schepping, zo veel als Zijn tevredenheid, zo zwaar als Zijn Troon, en zo oneindig als Zijn woorden.",
+      aantal: 3, categorie: "Tasbeeh",
+      beloning: "Zwaarder op de weegschaal dan de gewone tasbeeh. (Muslim)",
+    },
+    {
+      id: "a21",
+      arabic: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ",
+      fonetisch: "Astaghfirullaaha wa atoobu ilayh.",
+      vertaling: "Ik vraag Allah om vergeving en keer tot Hem terug.",
+      aantal: 100, categorie: "Istighfaar",
+      beloning: "De Profeet ﷺ zei dit 100× per dag. (Bukhari & Muslim)",
+    },
+    {
+      id: "a22",
+      arabic: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+      fonetisch: "A'oothu bikalimaatil-laahit-taammaati min sharri maa khalaq.",
+      vertaling: "Ik zoek bescherming in de volmaakte woorden van Allah tegen het kwaad van wat Hij heeft geschapen.",
+      aantal: 3, categorie: "Dhikr",
+      beloning: "Niets zal hem schaden totdat hij vertrekt. (Muslim)",
+    },
+    {
+      id: "a23",
+      arabic: "اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ",
+      fonetisch: "Allaahumma Salli wa Sallim 'alaa Nabeeyinnaa Muhammad.",
+      vertaling: "O Allah, zend zegeningen en vrede over onze Profeet Mohammed ﷺ.",
+      aantal: 10, categorie: "Salawaat",
+      beloning: "Wie 10× salawaat verzendt: 10 zegeningen van Allah, 10 zonden vergeven, 10 rangen verhoogd. (Muslim)",
+    },
   ],
 };
+
 
 /* ─── Category config ──────────────────────────────────────────────────────── */
 const CAT = {
@@ -192,24 +541,25 @@ const CAT = {
 function getTodayKey() { return new Date().toISOString().split("T")[0]; }
 
 async function loadStorage() {
-  try {
-    if (window.storage) {
-      const r = await window.storage.get("adkhar-progress-v2");
-      return r ? JSON.parse(r.value) : {};
-    }
-    const raw = localStorage.getItem("adkhar-progress-v2");
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
+  try { const r = await window.storage.get("adkhar-progress-v2"); return r ? JSON.parse(r.value) : {}; }
+  catch { return {}; }
 }
-
 async function saveStorage(data) {
-  try {
-    if (window.storage) {
-      await window.storage.set("adkhar-progress-v2", JSON.stringify(data));
-    } else {
-      localStorage.setItem("adkhar-progress-v2", JSON.stringify(data));
-    }
-  } catch {}
+  try { await window.storage.set("adkhar-progress-v2", JSON.stringify(data)); } catch {}
+}
+async function loadStreak() {
+  try { const r = await window.storage.get("adkhar-streak-v1"); return r ? JSON.parse(r.value) : { streak:0, lastDay:"" }; }
+  catch { return { streak:0, lastDay:"" }; }
+}
+async function saveStreak(data) {
+  try { await window.storage.set("adkhar-streak-v1", JSON.stringify(data)); } catch {}
+}
+async function loadDarkMode() {
+  try { const r = await window.storage.get("adkhar-dark-v1"); return r ? JSON.parse(r.value) : false; }
+  catch { return false; }
+}
+async function saveDarkMode(val) {
+  try { await window.storage.set("adkhar-dark-v1", JSON.stringify(val)); } catch {}
 }
 
 /* ─── Ornament SVG ─────────────────────────────────────────────────────────── */
@@ -238,14 +588,112 @@ export default function AdkharApp() {
   const [beloningOpen, setBeloningOpen]   = useState(false);
   const [fonetischOpen, setFonetischOpen] = useState(false);
   const [vertalingOpen, setVertalingOpen] = useState(false);
+  const [darkMode, setDarkMode]     = useState(false);
+  const [streak, setStreak]         = useState(0);
 
   const adkharLijst = ADKHAR[sessie];
   const huidig      = adkharLijst[huidigIndex];
   const todayKey    = getTodayKey();
 
+  // Apply dark mode to body
   useEffect(() => {
-    loadStorage().then(d => { if (d[todayKey]) setVoltooid(d[todayKey]); setGeladen(true); });
+    document.body.classList.toggle("dark", darkMode);
+  }, [darkMode]);
+
+  // Load all persisted state
+  useEffect(() => {
+    Promise.all([loadStorage(), loadStreak(), loadDarkMode()]).then(([prog, str, dark]) => {
+      if (prog[todayKey]) setVoltooid(prog[todayKey]);
+      setStreak(str.streak || 0);
+      setDarkMode(dark || false);
+      setGeladen(true);
+    });
   }, []);
+
+  // Audio helper — werkt wel op iOS (Web Audio API)
+  const audioCtx = useRef(null);
+  const getCtx = () => {
+    if (!audioCtx.current) audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx.current;
+  };
+
+  const playTick = useCallback((type = "tap") => {
+    try {
+      const ctx = getCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (type === "tap") {
+        // Zachte klik bij elke tel
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.05);
+      } else if (type === "complete") {
+        // Zacht dubbel toon als dhikr klaar is
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(660, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.22);
+      } else if (type === "next") {
+        // Kort opgaand tintje bij volgende dhikr
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.12);
+      } else if (type === "done") {
+        // Drie oplopende tonen als hele sessie klaar is
+        [0, 0.12, 0.24].forEach((delay, i) => {
+          const o2 = ctx.createOscillator();
+          const g2 = ctx.createGain();
+          o2.connect(g2); g2.connect(ctx.destination);
+          o2.type = "sine";
+          o2.frequency.setValueAtTime([440, 550, 660][i], ctx.currentTime + delay);
+          g2.gain.setValueAtTime(0.12, ctx.currentTime + delay);
+          g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.15);
+          o2.start(ctx.currentTime + delay);
+          o2.stop(ctx.currentTime + delay + 0.15);
+        });
+        return;
+      }
+    } catch (e) {}
+  }, []);
+
+  // Toggle dark mode
+  const toggleDark = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    saveDarkMode(next);
+  };
+
+  // Update streak when both sessions fully done
+  const checkStreak = useCallback(async (nieuweVoltooid) => {
+    const ochVolt = ADKHAR.ochtend.every(d => nieuweVoltooid[`${todayKey}-${d.id}`]);
+    const avVolt  = ADKHAR.avond.every(d => nieuweVoltooid[`${todayKey}-${d.id}`]);
+    if (!ochVolt && !avVolt) return;
+    const str = await loadStreak();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = yesterday.toISOString().split("T")[0];
+    let newStreak = str.streak;
+    if (str.lastDay === todayKey) return; // already counted today
+    if (str.lastDay === yesterdayKey) newStreak += 1;
+    else newStreak = 1;
+    const updated = { streak: newStreak, lastDay: todayKey };
+    setStreak(newStreak);
+    await saveStreak(updated);
+  }, [todayKey]);
 
   const slaOp = useCallback(async (nv) => {
     const data = await loadStorage();
@@ -253,7 +701,8 @@ export default function AdkharApp() {
     const keys = Object.keys(data).sort();
     if (keys.length > 30) delete data[keys[0]];
     await saveStorage(data);
-  }, [todayKey]);
+    await checkStreak(nv);
+  }, [todayKey, checkStreak]);
 
   const startSessie = (type) => {
     setSessie(type);
@@ -272,17 +721,30 @@ export default function AdkharApp() {
 
     const nt = teller + 1;
     setTeller(nt);
+    playTick("tap");
+
     if (nt >= huidig.aantal) {
       const nv = { ...voltooid, [`${todayKey}-${huidig.id}`]: true };
       setVoltooid(nv); slaOp(nv);
+      playTick("complete");
       setTimeout(() => {
-        if (huidigIndex < adkharLijst.length - 1) { setHuidigIndex(huidigIndex + 1); setTeller(0); setBeloningOpen(false); }
-        else setKlaar(true);
+        if (huidigIndex < adkharLijst.length - 1) {
+          setHuidigIndex(huidigIndex + 1); setTeller(0); setBeloningOpen(false);
+          setFonetischOpen(false); setVertalingOpen(false);
+          setTimeout(() => playTick("next"), 100);
+        } else {
+          setKlaar(true);
+          playTick("done");
+        }
       }, 450);
     }
   }, [teller, huidig, huidigIndex, adkharLijst, voltooid, klaar, todayKey, slaOp]);
 
-  const gaanNaar = (i) => { setHuidigIndex(i); setTeller(0); setKlaar(false); setBeloningOpen(false); setFonetischOpen(false); setVertalingOpen(false); };
+  const gaanNaar = (i) => {
+    playTick("next");
+    setHuidigIndex(i); setTeller(0); setKlaar(false);
+    setBeloningOpen(false); setFonetischOpen(false); setVertalingOpen(false);
+  };
   const voltVandaag = (type) => ADKHAR[type].filter(d => voltooid[`${todayKey}-${d.id}`]).length;
 
   /* ── Loading ── */
@@ -309,10 +771,17 @@ export default function AdkharApp() {
     return (
       <div className="paper" style={{ minHeight:"100vh", background:"var(--cream)", fontFamily:"'Cormorant Garamond', Georgia, serif", display:"flex", flexDirection:"column" }}>
 
-        {/* ── Top strip: date left, overzicht right ── */}
+        {/* ── Top strip: date left, dark toggle + overzicht right ── */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"44px 28px 0", animation:"fadeIn 0.6s ease" }}>
           <div style={{ fontFamily:"'Cormorant Garamond', serif", fontStyle:"italic", fontSize:"0.78rem", color:"var(--ink-muted)" }}>{datum}</div>
-          <button className="nav-btn" style={{ fontSize:"0.54rem" }} onClick={() => setScherm("overzicht")}>Overzicht</button>
+          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+            {/* Dark mode toggle */}
+            <div style={{ display:"flex", alignItems:"center", gap:7 }}>
+              <span style={{ fontSize:"0.65rem" }}>{darkMode ? "🌙" : "☀️"}</span>
+              <div className={`dark-toggle${darkMode ? " on" : ""}`} onClick={toggleDark}/>
+            </div>
+            <button className="nav-btn" style={{ fontSize:"0.54rem" }} onClick={() => setScherm("overzicht")}>Overzicht</button>
+          </div>
         </div>
 
         {/* ── Hero block ── */}
@@ -326,6 +795,17 @@ export default function AdkharApp() {
               Ochtend &amp; Avond
             </div>
           </div>
+
+          {/* ── Streak badge ── */}
+          {streak > 0 && (
+            <div className="streak-pop" style={{ marginTop:28, display:"inline-flex", alignItems:"center", gap:8, background: darkMode ? "#2A2218" : "#FBF6EC", border:"1px solid #C4933A33", borderRadius:100, padding:"8px 20px" }}>
+              <span style={{ fontSize:"1rem" }}>🔥</span>
+              <div>
+                <div style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"1.1rem", fontWeight:500, color:"var(--gold)", lineHeight:1 }}>{streak}</div>
+                <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.48rem", color:"var(--ink-faint)", letterSpacing:"0.15em" }}>dag{streak === 1 ? "" : "en"} streak</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Session blocks: full-width stacked ── */}
@@ -349,7 +829,7 @@ export default function AdkharApp() {
                   animation:`fadeUp 0.55s ${0.15 + i*0.1}s ease both`,
                   background:"transparent",
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.6)"}
+                onMouseEnter={e => e.currentTarget.style.background = darkMode ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.6)"}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
                 {/* Left: radial progress circle */}
@@ -489,52 +969,68 @@ export default function AdkharApp() {
           </button>
         </div>
       ) : (
-        <>
+        <React.Fragment key={huidig.id}>
           {/* Category pill */}
-          <div className="stagger-1" style={{ padding:"22px 26px 0" }}>
+          <div style={{ padding:"22px 26px 0" }}>
             <span className="pill" style={{ background:c.pill, color:c.pillText }}>{huidig.categorie}</span>
           </div>
 
-          {/* Arabic text */}
-          <div className="stagger-2" style={{ padding:"18px 26px 0", direction:"rtl" }}>
+          {/* Arabic text — always full, scrollable */}
+          <div style={{ padding:"18px 26px 0", direction:"rtl" }}>
             <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.8rem", lineHeight:2.1, color:"var(--ink)", textAlign:"right" }}>
               {huidig.arabic}
             </div>
           </div>
 
           {/* Divider */}
-          <div className="stagger-3" style={{ padding:"14px 26px 0" }}>
+          <div style={{ padding:"14px 26px 0" }}>
             <div style={{ height:1, background:`linear-gradient(90deg, ${c.accent}30, transparent)` }}/>
           </div>
 
-          {/* Phonetic */}
-          <div className="stagger-3" style={{ padding:"12px 26px 0" }}>
-            <div style={{ fontSize:"0.82rem", color:"var(--ink-muted)", fontStyle:"italic", lineHeight:1.85 }}>
-              {huidig.fonetisch}
-            </div>
-          </div>
-
-          {/* Translation */}
-          <div className="stagger-4" style={{ padding:"8px 26px 0" }}>
-            <div style={{ fontSize:"0.82rem", color:"var(--ink-faint)", lineHeight:1.9 }}>
-              {huidig.vertaling}
-            </div>
-          </div>
-
-          {/* Reward toggle */}
-          {huidig.beloning && (
-            <div className="stagger-5" style={{ padding:"16px 26px 0" }}>
+          {/* Toggle row: Fonetisch · Vertaling · Beloning */}
+          <div style={{ padding:"14px 26px 0", display:"flex", flexWrap:"wrap", gap:8 }}>
+            <button
+              onClick={() => setFonetischOpen(!fonetischOpen)}
+              style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.54rem", color: fonetischOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
+            >
+              ◌ Fonetisch
+            </button>
+            <button
+              onClick={() => setVertalingOpen(!vertalingOpen)}
+              style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.54rem", color: vertalingOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
+            >
+              ◌ Vertaling
+            </button>
+            {huidig.beloning && (
               <button
                 onClick={() => setBeloningOpen(!beloningOpen)}
-                style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.54rem", color:c.accent, letterSpacing:"0.16em", textTransform:"uppercase" }}
+                style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.54rem", color: beloningOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
               >
-                ✦ {beloningOpen ? "Verberg beloning" : "Beloning"}
+                ✦ Beloning
               </button>
-              {beloningOpen && (
-                <div style={{ marginTop:10, padding:"14px 18px", background:c.bg, border:`1px solid ${c.accent}20`, borderRadius:2, fontSize:"0.8rem", color:"var(--ink-soft)", lineHeight:1.8, fontStyle:"italic", animation:"fadeUp 0.3s ease" }}>
-                  {huidig.beloning}
-                </div>
-              )}
+            )}
+          </div>
+
+          {/* Expanded panels */}
+          {fonetischOpen && (
+            <div style={{ padding:"10px 26px 0", animation:"fadeUp 0.25s ease" }}>
+              <div style={{ padding:"14px 18px", background:"var(--cream-deep)", border:`1px solid ${c.accent}15`, borderRadius:2, fontSize:"0.82rem", color:"var(--ink-muted)", lineHeight:1.85, fontStyle:"italic" }}>
+                {huidig.fonetisch}
+              </div>
+            </div>
+          )}
+          {vertalingOpen && (
+            <div style={{ padding:"10px 26px 0", animation:"fadeUp 0.25s ease" }}>
+              <div style={{ padding:"14px 18px", background:"var(--cream-deep)", border:`1px solid ${c.accent}15`, borderRadius:2, fontSize:"0.82rem", color:"var(--ink-soft)", lineHeight:1.9 }}>
+                {huidig.vertaling}
+              </div>
+            </div>
+          )}
+          {beloningOpen && huidig.beloning && (
+            <div style={{ padding:"10px 26px 0", animation:"fadeUp 0.25s ease" }}>
+              <div style={{ padding:"14px 18px", background:c.bg, border:`1px solid ${c.accent}20`, borderRadius:2, fontSize:"0.8rem", color:"var(--ink-soft)", lineHeight:1.8, fontStyle:"italic" }}>
+                {huidig.beloning}
+              </div>
             </div>
           )}
 
@@ -547,8 +1043,8 @@ export default function AdkharApp() {
               position:"relative", margin:"0 20px 20px",
               borderRadius:4,
               background: isVolt
-                ? "linear-gradient(160deg, #EBF7F2, #F5FBF7)"
-                : "linear-gradient(160deg, #FFFFFF, #FDFBF7)",
+                ? "linear-gradient(160deg, #EBF7F233, var(--cream))"
+                : "linear-gradient(160deg, var(--card-bg), var(--cream))",
               border:`1px solid ${isVolt ? "#86EFAC55" : c.accent+"20"}`,
               padding:"32px 24px",
               cursor:"pointer", overflow:"hidden",
@@ -577,9 +1073,9 @@ export default function AdkharApp() {
                   <div style={{ fontSize:"1.6rem", color:"var(--sage)" }}>✓</div>
                 ) : (
                   <>
-                    <div style={{ fontSize:"2rem", fontWeight:300, color:c.accent, lineHeight:1, fontFamily:"'Cormorant Garamond', serif" }}>{restant}</div>
+                    <div style={{ fontSize:"2rem", fontWeight:300, color:c.accent, lineHeight:1, fontFamily:"'Cormorant Garamond', serif" }}>{teller}</div>
                     <div style={{ fontSize:"0.5rem", color:"var(--ink-faint)", letterSpacing:"0.1em", fontFamily:"'Cormorant SC', serif", marginTop:1 }}>
-                      {restant === huidig.aantal ? `${huidig.aantal}×` : "resterend"}
+                      {teller === 0 ? `${huidig.aantal}×` : `van ${huidig.aantal}`}
                     </div>
                   </>
                 )}
@@ -624,7 +1120,7 @@ export default function AdkharApp() {
               style={{ opacity: huidigIndex < adkharLijst.length - 1 ? 1 : 0.3, cursor: huidigIndex < adkharLijst.length - 1 ? "pointer" : "default" }}
             >Volgende →</button>
           </div>
-        </>
+        </React.Fragment>
       )}
     </div>
   );
