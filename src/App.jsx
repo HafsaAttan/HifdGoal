@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 const FONT_LINK = document.createElement("link");
 FONT_LINK.rel = "stylesheet";
 FONT_LINK.href =
-  "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cormorant+SC:wght@300;400&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap";
+  "https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cormorant+SC:wght@300;400&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap";
 document.head.appendChild(FONT_LINK);
 
 /* ─── CSS Variables & Global Styles ────────────────────────────────────────── */
@@ -28,6 +28,7 @@ const GLOBAL_CSS = `
     --violet-light: #E8DFF5;
     --card-bg: #FFFFFF;
     --border: rgba(196,147,58,0.15);
+    --pad: 26px;
   }
 
   body.dark {
@@ -82,8 +83,8 @@ const GLOBAL_CSS = `
 
   .nav-btn {
     font-family: 'Cormorant SC', serif;
-    font-size: 0.58rem;
-    letter-spacing: 0.22em;
+    font-size: 0.66rem;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--ink-muted);
     cursor: pointer;
@@ -114,6 +115,9 @@ const GLOBAL_CSS = `
     border-radius: 2px;
     padding: 3px 8px;
   }
+
+  /* Arabische tekst — Amiri leest mooier bij lange passages */
+  .arabic { font-family: 'Amiri', 'Noto Naskh Arabic', serif; }
 
   /* Paper texture overlay */
   .paper::before {
@@ -198,9 +202,9 @@ const ADKHAR = {
     },
     {
       id: "o5",
-      arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ، لاَ إِلَـهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيكَ لَهُ",
-      fonetisch: "Asbahnaa wa asbahal-mulku lillaahi walhamdu lillaahi, laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu wa Huwa 'alaa kulli shay'in Qadeer.",
-      vertaling: "Wij zijn de ochtend ingegaan en het koninkrijk behoort Allah toe. Alle lof is voor Allah. Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof, en Hij is over alles Almachtig.",
+      arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ، لاَ إِلَـهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَذَا الْيَوْمِ وَخَيْرَ مَا بَعْدَهُ، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هَذَا الْيَوْمِ وَشَرِّ مَا بَعْدَهُ، رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ وَسُوءِ الْكِبَرِ، رَبِّ أَعُوذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ",
+      fonetisch: "Asbahnaa wa asbahal-mulku lillaahi walhamdu lillaahi, laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu wa Huwa 'alaa kulli shay'in Qadeer. Rabbi as'aluka khayra maa fee haadhal-yawmi wa khayra maa ba'dahu, wa a'oothu bika min sharri maa fee haadhal-yawmi wa sharri maa ba'dahu. Rabbi a'oothu bika minal-kasali wa soo'il-kibari. Rabbi a'oothu bika min 'adhaabin fin-naari wa 'adhaabin fil-qabri.",
+      vertaling: "Wij zijn de ochtend ingegaan en het koninkrijk behoort Allah toe. Alle lof is voor Allah. Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof, en Hij is over alles Almachtig. Mijn Heer, ik vraag U het goede van deze dag en het goede van wat erna komt, en ik zoek bescherming bij U tegen het kwaad van deze dag en het kwaad van wat erna komt. Mijn Heer, ik zoek bescherming bij U tegen luiheid en de ellende van de ouderdom. Mijn Heer, ik zoek bescherming bij U tegen een bestraffing in het Vuur en een bestraffing in het graf.",
       aantal: 1, categorie: "Dhikr", beloning: null,
     },
     {
@@ -251,9 +255,9 @@ const ADKHAR = {
     },
     {
       id: "o12",
-      arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ",
-      fonetisch: "Allaahumma innee as'alukal-'afwa wal-'aafiyata fid-dunyaa wal-aakhirati. Allaahum-mastur 'awraatee, wa amin raw'aatee. Allaahum-mahfadhnee min bayni yadayya, wa min khalfee, wa 'an yameenee, wa 'an shimaalee, wa min fawqee, wa a'oothu bi'adhamatika an ughtaala min tahtee.",
-      vertaling: "O Allah, ik vraag U om vergeving en welzijn in dit leven en het hiernamaals. O Allah, bedek mijn gebreken en stel mijn angsten gerust. O Allah, bescherm mij van vóór mij en achter mij, van rechts, van links en van boven — en ik zoek bescherming in Uw Grootheid dat ik van onderen vernietigd word.",
+      arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي، اللَّهُمَّ اسْتُرْ عَوْرَاتِي وَآمِنْ رَوْعَاتِي، اللَّهُمَّ احْفَظْنِي مِنْ بَيْنِ يَدَيَّ وَمِنْ خَلْفِي وَعَنْ يَمِينِي وَعَنْ شِمَالِي وَمِنْ فَوْقِي، وَأَعُوذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي",
+      fonetisch: "Allaahumma innee as'alukal-'afwa wal-'aafiyata fid-dunyaa wal-aakhirah. Allaahumma innee as'alukal-'afwa wal-'aafiyata fee deenee wa dunyaaya wa ahlee wa maalee. Allaahum-mastur 'awraatee wa aamin raw'aatee. Allaahum-mahfadhnee min bayni yadayya wa min khalfee wa 'an yameenee wa 'an shimaalee wa min fawqee, wa a'oothu bi'adhamatika an ughtaala min tahtee.",
+      vertaling: "O Allah, ik vraag U om vergiffenis en welzijn in dit leven en het hiernamaals. O Allah, ik vraag U om vergiffenis en welzijn in mijn geloof, mijn wereldse leven, mijn familie en mijn bezit. O Allah, bedek mijn gebreken en stel mijn angsten gerust. O Allah, bescherm mij van vóór mij, van achter mij, van mijn rechterzijde, mijn linkerzijde en van boven mij, en ik zoek bescherming in Uw Grootheid dat ik van onderen onverhoeds vernietigd word.",
       aantal: 1, categorie: "Dhikr", beloning: null,
     },
     {
@@ -284,6 +288,13 @@ const ADKHAR = {
       arabic: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",
       fonetisch: "Yaa Hayyu yaa Qayyoomu birahmatika astagheethu, aslih lee sha'nee kullahu wa laa takilnee ilaa nafsee tarfata 'aynin.",
       vertaling: "O Eeuwig Levende, o Zelfbestaande — door Uw genade zoek ik hulp. Herstel al mijn aangelegenheden en laat mij geen ogenblik aan mijzelf over.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "o16b",
+      arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ رَبِّ الْعَالَمِينَ، اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذَا الْيَوْمِ: فَتْحَهُ وَنَصْرَهُ وَنُورَهُ وَبَرَكَتَهُ وَهُدَاهُ، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِيهِ وَشَرِّ مَا بَعْدَهُ",
+      fonetisch: "Asbahnaa wa asbahal-mulku lillaahi Rabbil-'aalameen. Allaahumma innee as'aluka khayra haadhal-yawmi: fat-hahu wa nasrahu wa noorahu wa barakatahu wa hudaahu, wa a'oothu bika min sharri maa feehi wa sharri maa ba'dahu.",
+      vertaling: "Wij zijn de ochtend ingegaan en het koninkrijk behoort Allah toe, de Heer der werelden. O Allah, ik vraag U het goede van deze dag: zijn overwinning, zijn hulp, zijn licht, zijn zegen en zijn leiding, en ik zoek bescherming bij U tegen het kwaad dat erin is en het kwaad van wat erna komt.",
       aantal: 1, categorie: "Dhikr", beloning: null,
     },
     {
@@ -382,9 +393,9 @@ const ADKHAR = {
     },
     {
       id: "a5",
-      arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ، لاَ إِلَـهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ",
-      fonetisch: "Amsaynaa wa amsal-mulku lillaahi walhamdu lillaahi, laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu wa Huwa 'alaa kulli shay'in Qadeer.",
-      vertaling: "Wij zijn de avond ingegaan en het koninkrijk behoort Allah toe. Alle lof is voor Allah. Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof, en Hij is over alles Almachtig.",
+      arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ، لاَ إِلَـهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَذِهِ اللَّيْلَةِ وَخَيْرَ مَا بَعْدَهَا، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هَذِهِ اللَّيْلَةِ وَشَرِّ مَا بَعْدَهَا، رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ وَسُوءِ الْكِبَرِ، رَبِّ أَعُوذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ",
+      fonetisch: "Amsaynaa wa amsal-mulku lillaahi walhamdu lillaahi, laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu wa Huwa 'alaa kulli shay'in Qadeer. Rabbi as'aluka khayra maa fee haadhihil-laylati wa khayra maa ba'dahaa, wa a'oothu bika min sharri maa fee haadhihil-laylati wa sharri maa ba'dahaa. Rabbi a'oothu bika minal-kasali wa soo'il-kibari. Rabbi a'oothu bika min 'adhaabin fin-naari wa 'adhaabin fil-qabri.",
+      vertaling: "Wij zijn de avond ingegaan en het koninkrijk behoort Allah toe. Alle lof is voor Allah. Er is geen god dan Allah alleen, zonder deelgenoot. Aan Hem behoort het koninkrijk en alle lof, en Hij is over alles Almachtig. Mijn Heer, ik vraag U het goede van deze nacht en het goede van wat erna komt, en ik zoek bescherming bij U tegen het kwaad van deze nacht en het kwaad van wat erna komt. Mijn Heer, ik zoek bescherming bij U tegen luiheid en de ellende van de ouderdom. Mijn Heer, ik zoek bescherming bij U tegen een bestraffing in het Vuur en een bestraffing in het graf.",
       aantal: 1, categorie: "Dhikr", beloning: null,
     },
     {
@@ -435,9 +446,9 @@ const ADKHAR = {
     },
     {
       id: "a12",
-      arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ",
-      fonetisch: "Allaahumma innee as'alukal-'afwa wal-'aafiyata fid-dunyaa wal-aakhirati. Allaahum-mastur 'awraatee, wa amin raw'aatee. Allaahum-mahfadhnee min bayni yadayya, wa min khalfee, wa 'an yameenee, wa 'an shimaalee, wa min fawqee, wa a'oothu bi'adhamatika an ughtaala min tahtee.",
-      vertaling: "O Allah, ik vraag U om vergeving en welzijn in dit leven en het hiernamaals. O Allah, bedek mijn gebreken en stel mijn angsten gerust. O Allah, bescherm mij van vóór mij en achter mij, van rechts, van links en van boven — en ik zoek bescherming in Uw Grootheid dat ik van onderen vernietigd word.",
+      arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي، اللَّهُمَّ اسْتُرْ عَوْرَاتِي وَآمِنْ رَوْعَاتِي، اللَّهُمَّ احْفَظْنِي مِنْ بَيْنِ يَدَيَّ وَمِنْ خَلْفِي وَعَنْ يَمِينِي وَعَنْ شِمَالِي وَمِنْ فَوْقِي، وَأَعُوذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي",
+      fonetisch: "Allaahumma innee as'alukal-'afwa wal-'aafiyata fid-dunyaa wal-aakhirah. Allaahumma innee as'alukal-'afwa wal-'aafiyata fee deenee wa dunyaaya wa ahlee wa maalee. Allaahum-mastur 'awraatee wa aamin raw'aatee. Allaahum-mahfadhnee min bayni yadayya wa min khalfee wa 'an yameenee wa 'an shimaalee wa min fawqee, wa a'oothu bi'adhamatika an ughtaala min tahtee.",
+      vertaling: "O Allah, ik vraag U om vergiffenis en welzijn in dit leven en het hiernamaals. O Allah, ik vraag U om vergiffenis en welzijn in mijn geloof, mijn wereldse leven, mijn familie en mijn bezit. O Allah, bedek mijn gebreken en stel mijn angsten gerust. O Allah, bescherm mij van vóór mij, van achter mij, van mijn rechterzijde, mijn linkerzijde en van boven mij, en ik zoek bescherming in Uw Grootheid dat ik van onderen onverhoeds vernietigd word.",
       aantal: 1, categorie: "Dhikr", beloning: null,
     },
     {
@@ -468,6 +479,13 @@ const ADKHAR = {
       arabic: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",
       fonetisch: "Yaa Hayyu yaa Qayyoomu birahmatika astagheethu, aslih lee sha'nee kullahu wa laa takilnee ilaa nafsee tarfata 'aynin.",
       vertaling: "O Eeuwig Levende, o Zelfbestaande — door Uw genade zoek ik hulp. Herstel al mijn aangelegenheden en laat mij geen ogenblik aan mijzelf over.",
+      aantal: 1, categorie: "Dhikr", beloning: null,
+    },
+    {
+      id: "a16b",
+      arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ رَبِّ الْعَالَمِينَ، اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذِهِ اللَّيْلَةِ: فَتْحَهَا وَنَصْرَهَا وَنُورَهَا وَبَرَكَتَهَا وَهُدَاهَا، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِيهَا وَشَرِّ مَا بَعْدَهَا",
+      fonetisch: "Amsaynaa wa amsal-mulku lillaahi Rabbil-'aalameen. Allaahumma innee as'aluka khayra haadhihil-laylati: fat-hahaa wa nasrahaa wa noorahaa wa barakatahaa wa hudaahaa, wa a'oothu bika min sharri maa feehaa wa sharri maa ba'dahaa.",
+      vertaling: "Wij zijn de avond ingegaan en het koninkrijk behoort Allah toe, de Heer der werelden. O Allah, ik vraag U het goede van deze nacht: haar overwinning, haar hulp, haar licht, haar zegen en haar leiding, en ik zoek bescherming bij U tegen het kwaad dat erin is en het kwaad van wat erna komt.",
       aantal: 1, categorie: "Dhikr", beloning: null,
     },
     {
@@ -538,28 +556,33 @@ const CAT = {
   Salawaat:   { accent:"#2A6B52", bg:"#EBF7F2", pill:"#C5EAD8", pillText:"#1A4A38", dot:"#2A6B52" },
 };
 
+/* ─── Personalisatie — pas hier je naam en begroeting aan ── */
+const NAAM  = "Hafsa";
+const GROET = "As-salāmu ʿalaykum";
+
 function getTodayKey() { return new Date().toISOString().split("T")[0]; }
 
+/* ─── Opslag via localStorage (werkt op GitHub Pages / in de browser) ──────── */
 async function loadStorage() {
-  try { const r = await window.storage.get("adkhar-progress-v2"); return r ? JSON.parse(r.value) : {}; }
+  try { const r = localStorage.getItem("adkhar-progress-v2"); return r ? JSON.parse(r) : {}; }
   catch { return {}; }
 }
 async function saveStorage(data) {
-  try { await window.storage.set("adkhar-progress-v2", JSON.stringify(data)); } catch {}
+  try { localStorage.setItem("adkhar-progress-v2", JSON.stringify(data)); } catch {}
 }
 async function loadStreak() {
-  try { const r = await window.storage.get("adkhar-streak-v1"); return r ? JSON.parse(r.value) : { streak:0, lastDay:"" }; }
+  try { const r = localStorage.getItem("adkhar-streak-v1"); return r ? JSON.parse(r) : { streak:0, lastDay:"" }; }
   catch { return { streak:0, lastDay:"" }; }
 }
 async function saveStreak(data) {
-  try { await window.storage.set("adkhar-streak-v1", JSON.stringify(data)); } catch {}
+  try { localStorage.setItem("adkhar-streak-v1", JSON.stringify(data)); } catch {}
 }
 async function loadDarkMode() {
-  try { const r = await window.storage.get("adkhar-dark-v1"); return r ? JSON.parse(r.value) : false; }
+  try { const r = localStorage.getItem("adkhar-dark-v1"); return r ? JSON.parse(r) : false; }
   catch { return false; }
 }
 async function saveDarkMode(val) {
-  try { await window.storage.set("adkhar-dark-v1", JSON.stringify(val)); } catch {}
+  try { localStorage.setItem("adkhar-dark-v1", JSON.stringify(val)); } catch {}
 }
 
 /* ─── Ornament SVG ─────────────────────────────────────────────────────────── */
@@ -761,10 +784,11 @@ export default function AdkharApp() {
   ═══════════════════════════════════════════════════════════════════════════ */
   if (scherm === "home") {
     const ochV = voltVandaag("ochtend"), avV = voltVandaag("avond");
-    const datum = new Date().toLocaleDateString("nl-NL", { weekday:"long", day:"numeric", month:"long" });
+    const datumRaw = new Date().toLocaleDateString("nl-NL", { weekday:"long", day:"numeric", month:"long" });
+    const datum = datumRaw.charAt(0).toUpperCase() + datumRaw.slice(1);
 
     const sessions = [
-      { type:"ochtend", arabisch:"أذكار الصباح", label:"Ochtendhkaar", sub:"Na Fajr · tot zonsopgang", volt:ochV, totaal:ADKHAR.ochtend.length, accent:"#C4933A" },
+      { type:"ochtend", arabisch:"أذكار الصباح", label:"Ochtendadhkaar", sub:"Na Fajr · tot zonsopgang", volt:ochV, totaal:ADKHAR.ochtend.length, accent:"#C4933A" },
       { type:"avond",   arabisch:"أذكار المساء",  label:"Avondadhkaar",  sub:"Na Asr · tot Maghrib",   volt:avV,  totaal:ADKHAR.avond.length,   accent:"#2A5278" },
     ];
 
@@ -772,33 +796,39 @@ export default function AdkharApp() {
       <div className="paper" style={{ minHeight:"100vh", background:"var(--cream)", fontFamily:"'Cormorant Garamond', Georgia, serif", display:"flex", flexDirection:"column" }}>
 
         {/* ── Top strip: date left, dark toggle + overzicht right ── */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"44px 28px 0", animation:"fadeIn 0.6s ease" }}>
-          <div style={{ fontFamily:"'Cormorant Garamond', serif", fontStyle:"italic", fontSize:"0.78rem", color:"var(--ink-muted)" }}>{datum}</div>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"48px var(--pad) 0", animation:"fadeIn 0.6s ease" }}>
+          <div style={{ width:24 }}/>
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
             {/* Dark mode toggle */}
             <div style={{ display:"flex", alignItems:"center", gap:7 }}>
               <span style={{ fontSize:"0.65rem" }}>{darkMode ? "🌙" : "☀️"}</span>
               <div className={`dark-toggle${darkMode ? " on" : ""}`} onClick={toggleDark}/>
             </div>
-            <button className="nav-btn" style={{ fontSize:"0.54rem" }} onClick={() => setScherm("overzicht")}>Overzicht</button>
+            <button className="nav-btn" style={{ fontSize:"0.6rem" }} onClick={() => setScherm("overzicht")}>Overzicht</button>
           </div>
         </div>
 
         {/* ── Hero block ── */}
-        <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", padding:"32px 28px 0", textAlign:"center" }}>
+        <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", padding:"40px var(--pad) 0", textAlign:"center" }}>
           <div style={{ animation:"fadeUp 0.7s ease both" }}>
-            <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"4rem", color:"var(--ink)", lineHeight:1.15, direction:"rtl", marginBottom:16 }}>
+            <div className="arabic" style={{ fontSize:"4rem", color:"var(--ink)", lineHeight:1.2, direction:"rtl", marginBottom:18 }}>
               الأذكار
             </div>
             <Ornament color="#C4933A" opacity={0.5}/>
-            <div style={{ marginTop:12, fontFamily:"'Cormorant SC', serif", fontSize:"0.58rem", color:"var(--ink-faint)", letterSpacing:"0.4em", textTransform:"uppercase" }}>
+            <div style={{ marginTop:14, fontFamily:"'Cormorant SC', serif", fontSize:"0.58rem", color:"var(--ink-faint)", letterSpacing:"0.4em", textTransform:"uppercase" }}>
               Ochtend &amp; Avond
+            </div>
+            <div style={{ marginTop:28, fontFamily:"'Cormorant Garamond', serif", fontStyle:"italic", fontSize:"1.3rem", color:"var(--ink-soft)" }}>
+              {GROET}, {NAAM}
+            </div>
+            <div style={{ marginTop:7, fontFamily:"'Cormorant SC', serif", fontSize:"0.66rem", color:"var(--ink-faint)", letterSpacing:"0.16em" }}>
+              {datum}
             </div>
           </div>
 
           {/* ── Streak badge ── */}
           {streak > 0 && (
-            <div className="streak-pop" style={{ marginTop:28, display:"inline-flex", alignItems:"center", gap:8, background: darkMode ? "#2A2218" : "#FBF6EC", border:"1px solid #C4933A33", borderRadius:100, padding:"8px 20px" }}>
+            <div className="streak-pop" style={{ marginTop:32, display:"inline-flex", alignItems:"center", gap:8, background: darkMode ? "#2A2218" : "#FBF6EC", border:"1px solid #C4933A33", borderRadius:100, padding:"8px 20px" }}>
               <span style={{ fontSize:"1rem" }}>🔥</span>
               <div>
                 <div style={{ fontFamily:"'Cormorant Garamond', serif", fontSize:"1.1rem", fontWeight:500, color:"var(--gold)", lineHeight:1 }}>{streak}</div>
@@ -809,7 +839,7 @@ export default function AdkharApp() {
         </div>
 
         {/* ── Session blocks: full-width stacked ── */}
-        <div style={{ padding:"40px 0 0" }}>
+        <div style={{ padding:"44px 0 0" }}>
           {sessions.map((s, i) => {
             const pct  = s.volt / s.totaal;
             const done = s.volt === s.totaal;
@@ -820,7 +850,7 @@ export default function AdkharApp() {
                 style={{
                   borderTop: i === 0 ? "1px solid var(--cream-deep)" : "none",
                   borderBottom: "1px solid var(--cream-deep)",
-                  padding:"24px 28px",
+                  padding:"26px var(--pad)",
                   cursor:"pointer",
                   display:"flex",
                   alignItems:"center",
@@ -853,9 +883,9 @@ export default function AdkharApp() {
 
                 {/* Middle: text */}
                 <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.15rem", color:"var(--ink-soft)", direction:"rtl", marginBottom:4 }}>{s.arabisch}</div>
-                  <div style={{ fontSize:"0.9rem", color:"var(--ink)", fontWeight:500, marginBottom:2 }}>{s.label}</div>
-                  <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.56rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>{s.sub} · {s.volt}/{s.totaal}</div>
+                  <div className="arabic" style={{ fontSize:"1.35rem", color:"var(--ink-soft)", direction:"rtl", marginBottom:5 }}>{s.arabisch}</div>
+                  <div style={{ fontSize:"1.05rem", color:"var(--ink)", fontWeight:500, marginBottom:3 }}>{s.label}</div>
+                  <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.66rem", color:"var(--ink-faint)", letterSpacing:"0.08em" }}>{s.sub} · {s.volt}/{s.totaal}</div>
                 </div>
 
                 {/* Right: arrow */}
@@ -878,15 +908,15 @@ export default function AdkharApp() {
     return (
       <div style={{ minHeight:"100vh", background:"var(--cream)", fontFamily:"'Cormorant Garamond', Georgia, serif" }}>
         {/* Nav */}
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"52px 24px 28px" }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"52px var(--pad) 28px" }}>
           <button className="nav-btn" onClick={() => setScherm("home")}>← Terug</button>
           <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.65rem", color:"var(--ink-soft)", letterSpacing:"0.2em", textTransform:"uppercase" }}>Overzicht Vandaag</div>
           <div style={{ width:60 }}/>
         </div>
 
         {["ochtend", "avond"].map((type) => (
-          <div key={type} style={{ padding:"0 20px", maxWidth:440, margin:"0 auto 44px" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14, padding:"0 4px" }}>
+          <div key={type} style={{ padding:"0 var(--pad)", maxWidth:440, margin:"0 auto 44px" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16, padding:"0 4px" }}>
               <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.6rem", color:"var(--ink-muted)", letterSpacing:"0.25em", textTransform:"uppercase" }}>
                 {type === "ochtend" ? "🌅 Ochtend" : "🌙 Avond"}
               </div>
@@ -901,13 +931,13 @@ export default function AdkharApp() {
                   key={d.id}
                   className="dhikr-card"
                   onClick={() => { setSessie(type); gaanNaar(i); setScherm("sessie"); }}
-                  style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"13px 16px", marginBottom:5, opacity: isVolt ? 0.72 : 1 }}
+                  style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"14px 16px", marginBottom:6, opacity: isVolt ? 0.72 : 1 }}
                 >
                   <div style={{ width:18, height:18, borderRadius:"50%", border:`1.5px solid ${isVolt ? "#4A7C59" : c.accent}40`, background: isVolt ? "#4A7C59" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.55rem", color:"white", flexShrink:0, marginTop:2 }}>
                     {isVolt ? "✓" : ""}
                   </div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"0.95rem", color: isVolt ? "var(--ink-muted)" : "var(--ink-soft)", marginBottom:4, direction:"rtl", textAlign:"right", lineHeight:1.6 }}>
+                    <div className="arabic" style={{ fontSize:"0.95rem", color: isVolt ? "var(--ink-muted)" : "var(--ink-soft)", marginBottom:4, direction:"rtl", textAlign:"right", lineHeight:1.7 }}>
                       {d.arabic.length > 60 ? d.arabic.slice(0,60)+"…" : d.arabic}
                     </div>
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -938,7 +968,7 @@ export default function AdkharApp() {
     <div style={{ minHeight:"100vh", background:"var(--cream)", display:"flex", flexDirection:"column", fontFamily:"'Cormorant Garamond', Georgia, serif", userSelect:"none" }}>
 
       {/* Top bar */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"50px 24px 0" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"48px var(--pad) 0" }}>
         <button className="nav-btn" onClick={() => setScherm("home")}>← Home</button>
         <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.6rem", color:"var(--ink-muted)", letterSpacing:"0.18em" }}>
           {sessie === "ochtend" ? "🌅" : "🌙"} {huidigIndex + 1} / {adkharLijst.length}
@@ -947,7 +977,7 @@ export default function AdkharApp() {
       </div>
 
       {/* Progress bar */}
-      <div style={{ height:2, background:"var(--cream-deep)", margin:"14px 24px 0", borderRadius:1 }}>
+      <div style={{ height:2, background:"var(--cream-deep)", margin:"16px var(--pad) 0", borderRadius:1 }}>
         <div style={{ height:"100%", width:`${(voltAantal/adkharLijst.length)*100}%`, background:`linear-gradient(90deg, ${c.accent}88, ${c.accent})`, borderRadius:1, transition:"width 0.5s ease" }}/>
       </div>
 
@@ -957,7 +987,7 @@ export default function AdkharApp() {
           <div className="complete-pop" style={{ width:76, height:76, borderRadius:"50%", background:"linear-gradient(135deg, #D4EAD9, #B8E0C2)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.8rem", marginBottom:28, boxShadow:"0 8px 32px rgba(74,124,89,0.2)" }}>
             ✓
           </div>
-          <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"2rem", color:"var(--ink)", marginBottom:10, direction:"rtl" }}>بارك الله فيك</div>
+          <div className="arabic" style={{ fontSize:"2rem", color:"var(--ink)", marginBottom:10, direction:"rtl" }}>بارك الله فيك</div>
           <div className="session-divider" style={{ marginBottom:18 }}/>
           <div style={{ fontSize:"1rem", color:"var(--ink-soft)", marginBottom:8 }}>Alle {sessie}adhkaar voltooid</div>
           <div style={{ fontSize:"0.8rem", color:"var(--ink-muted)", fontStyle:"italic", marginBottom:52 }}>Moge Allah het van jou aanvaarden</div>
@@ -971,40 +1001,40 @@ export default function AdkharApp() {
       ) : (
         <React.Fragment key={huidig.id}>
           {/* Category pill */}
-          <div style={{ padding:"22px 26px 0" }}>
+          <div style={{ padding:"24px var(--pad) 0" }}>
             <span className="pill" style={{ background:c.pill, color:c.pillText }}>{huidig.categorie}</span>
           </div>
 
           {/* Arabic text — always full, scrollable */}
-          <div style={{ padding:"18px 26px 0", direction:"rtl" }}>
-            <div style={{ fontFamily:"'Noto Naskh Arabic', serif", fontSize:"1.8rem", lineHeight:2.1, color:"var(--ink)", textAlign:"right" }}>
+          <div style={{ padding:"22px var(--pad) 0", direction:"rtl" }}>
+            <div className="arabic" style={{ fontSize:"1.85rem", lineHeight:2.25, color:"var(--ink)", textAlign:"right" }}>
               {huidig.arabic}
             </div>
           </div>
 
           {/* Divider */}
-          <div style={{ padding:"14px 26px 0" }}>
+          <div style={{ padding:"18px var(--pad) 0" }}>
             <div style={{ height:1, background:`linear-gradient(90deg, ${c.accent}30, transparent)` }}/>
           </div>
 
           {/* Toggle row: Fonetisch · Vertaling · Beloning */}
-          <div style={{ padding:"14px 26px 0", display:"flex", flexWrap:"wrap", gap:8 }}>
+          <div style={{ padding:"16px var(--pad) 0", display:"flex", flexWrap:"wrap", gap:8 }}>
             <button
               onClick={() => setFonetischOpen(!fonetischOpen)}
-              style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.54rem", color: fonetischOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
+              style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"9px 16px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.62rem", color: fonetischOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
             >
               ◌ Fonetisch
             </button>
             <button
               onClick={() => setVertalingOpen(!vertalingOpen)}
-              style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.54rem", color: vertalingOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
+              style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"9px 16px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.62rem", color: vertalingOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
             >
               ◌ Vertaling
             </button>
             {huidig.beloning && (
               <button
                 onClick={() => setBeloningOpen(!beloningOpen)}
-                style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"6px 14px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.54rem", color: beloningOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
+                style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"9px 16px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.62rem", color: beloningOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
               >
                 ✦ Beloning
               </button>
@@ -1013,28 +1043,28 @@ export default function AdkharApp() {
 
           {/* Expanded panels */}
           {fonetischOpen && (
-            <div style={{ padding:"10px 26px 0", animation:"fadeUp 0.25s ease" }}>
-              <div style={{ padding:"14px 18px", background:"var(--cream-deep)", border:`1px solid ${c.accent}15`, borderRadius:2, fontSize:"0.82rem", color:"var(--ink-muted)", lineHeight:1.85, fontStyle:"italic" }}>
+            <div style={{ padding:"12px var(--pad) 0", animation:"fadeUp 0.25s ease" }}>
+              <div style={{ padding:"16px 18px", background:"var(--cream-deep)", border:`1px solid ${c.accent}15`, borderRadius:2, fontSize:"0.82rem", color:"var(--ink-muted)", lineHeight:1.9, fontStyle:"italic" }}>
                 {huidig.fonetisch}
               </div>
             </div>
           )}
           {vertalingOpen && (
-            <div style={{ padding:"10px 26px 0", animation:"fadeUp 0.25s ease" }}>
-              <div style={{ padding:"14px 18px", background:"var(--cream-deep)", border:`1px solid ${c.accent}15`, borderRadius:2, fontSize:"0.82rem", color:"var(--ink-soft)", lineHeight:1.9 }}>
+            <div style={{ padding:"12px var(--pad) 0", animation:"fadeUp 0.25s ease" }}>
+              <div style={{ padding:"16px 18px", background:"var(--cream-deep)", border:`1px solid ${c.accent}15`, borderRadius:2, fontSize:"0.82rem", color:"var(--ink-soft)", lineHeight:1.95 }}>
                 {huidig.vertaling}
               </div>
             </div>
           )}
           {beloningOpen && huidig.beloning && (
-            <div style={{ padding:"10px 26px 0", animation:"fadeUp 0.25s ease" }}>
-              <div style={{ padding:"14px 18px", background:c.bg, border:`1px solid ${c.accent}20`, borderRadius:2, fontSize:"0.8rem", color:"var(--ink-soft)", lineHeight:1.8, fontStyle:"italic" }}>
+            <div style={{ padding:"12px var(--pad) 0", animation:"fadeUp 0.25s ease" }}>
+              <div style={{ padding:"16px 18px", background:c.bg, border:`1px solid ${c.accent}20`, borderRadius:2, fontSize:"0.8rem", color:"var(--ink-soft)", lineHeight:1.85, fontStyle:"italic" }}>
                 {huidig.beloning}
               </div>
             </div>
           )}
 
-          <div style={{ flex:1, minHeight:16 }}/>
+          <div style={{ flex:1, minHeight:20 }}/>
 
           {/* ── Tap zone ── */}
           <div
@@ -1074,7 +1104,7 @@ export default function AdkharApp() {
                 ) : (
                   <>
                     <div style={{ fontSize:"2rem", fontWeight:300, color:c.accent, lineHeight:1, fontFamily:"'Cormorant Garamond', serif" }}>{teller}</div>
-                    <div style={{ fontSize:"0.5rem", color:"var(--ink-faint)", letterSpacing:"0.1em", fontFamily:"'Cormorant SC', serif", marginTop:1 }}>
+                    <div style={{ fontSize:"0.6rem", color:"var(--ink-faint)", letterSpacing:"0.1em", fontFamily:"'Cormorant SC', serif", marginTop:3 }}>
                       {teller === 0 ? `${huidig.aantal}×` : `van ${huidig.aantal}`}
                     </div>
                   </>
@@ -1082,13 +1112,13 @@ export default function AdkharApp() {
               </div>
             </div>
 
-            <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.58rem", color:"var(--ink-faint)", letterSpacing:"0.18em", textTransform:"uppercase" }}>
+            <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.66rem", color:"var(--ink-faint)", letterSpacing:"0.18em", textTransform:"uppercase" }}>
               {isVolt ? "Voltooid · tik om verder" : `${teller} / ${huidig.aantal} · tik om te tellen`}
             </div>
           </div>
 
           {/* Navigation */}
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"0 26px 48px" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"0 var(--pad) 48px" }}>
             <button
               className="nav-btn"
               onClick={() => huidigIndex > 0 && gaanNaar(huidigIndex - 1)}
