@@ -1021,20 +1021,20 @@ export default function AdkharApp() {
           <div style={{ padding:"16px var(--pad) 0", display:"flex", flexWrap:"wrap", gap:8 }}>
             <button
               onClick={() => setFonetischOpen(!fonetischOpen)}
-              style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"9px 16px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.62rem", color: fonetischOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
+              style={{ background: fonetischOpen ? c.accent : c.pill, border:`1px solid ${c.accent}33`, borderRadius:3, padding:"10px 18px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.68rem", color: fonetischOpen ? "#FFFFFF" : c.pillText, letterSpacing:"0.16em", textTransform:"uppercase" }}
             >
               ◌ Fonetisch
             </button>
             <button
               onClick={() => setVertalingOpen(!vertalingOpen)}
-              style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"9px 16px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.62rem", color: vertalingOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
+              style={{ background: vertalingOpen ? c.accent : c.pill, border:`1px solid ${c.accent}33`, borderRadius:3, padding:"10px 18px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.68rem", color: vertalingOpen ? "#FFFFFF" : c.pillText, letterSpacing:"0.16em", textTransform:"uppercase" }}
             >
               ◌ Vertaling
             </button>
             {huidig.beloning && (
               <button
                 onClick={() => setBeloningOpen(!beloningOpen)}
-                style={{ background:"none", border:`1px solid ${c.accent}30`, borderRadius:2, padding:"9px 16px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.62rem", color: beloningOpen ? c.accent : "var(--ink-muted)", letterSpacing:"0.16em", textTransform:"uppercase" }}
+                style={{ background: beloningOpen ? c.accent : c.pill, border:`1px solid ${c.accent}33`, borderRadius:3, padding:"10px 18px", display:"inline-flex", alignItems:"center", gap:6, cursor:"pointer", fontFamily:"'Cormorant SC', serif", fontSize:"0.68rem", color: beloningOpen ? "#FFFFFF" : c.pillText, letterSpacing:"0.16em", textTransform:"uppercase" }}
               >
                 ✦ Beloning
               </button>
@@ -1112,7 +1112,7 @@ export default function AdkharApp() {
               </div>
             </div>
 
-            <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.66rem", color:"var(--ink-faint)", letterSpacing:"0.18em", textTransform:"uppercase" }}>
+            <div style={{ fontFamily:"'Cormorant SC', serif", fontSize:"0.74rem", color:c.accent, letterSpacing:"0.18em", textTransform:"uppercase", fontWeight:500 }}>
               {isVolt ? "Voltooid · tik om verder" : `${teller} / ${huidig.aantal} · tik om te tellen`}
             </div>
           </div>
